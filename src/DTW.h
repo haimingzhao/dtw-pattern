@@ -5,10 +5,12 @@
 #ifndef DTWM_DTW_H
 #define DTWM_DTW_H
 
-
 #include <stdlib.h>
 #include <cmath>
 #include <iostream>
+#include <string>
+#include <fstream>
+#include <bits/stl_bvector.h>
 
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
 
@@ -31,8 +33,11 @@ public:
     void printC();
     void printD();
 
-    void writeC();
-    void writeD();
+    // read write CSV file
+    vector readSeries(string filename);
+    void writeC(string filename);
+    void writeD(string filename);
+
 };
 
 

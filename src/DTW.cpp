@@ -63,3 +63,21 @@ void DTW::printD(){
         cout << endl;
     }
 }
+
+vector DTW::readSeries(string filename) {
+//    ifstream file(filename);
+//    while(getline(file,line))
+//    {
+//        ++numline;
+//    }
+
+    return std::vector();
+}
+
+void DTW::writeC(string filename) {
+
+}
+
+void DTW::writeD(string filename) {
+
+}
