@@ -21,7 +21,7 @@ CUDA_DIR := /local/java/cuda
 
 # gcc flags:
 CXX := g++
-CXXFLAGS_DEBUG := -g -DDEBUG
+CXXFLAGS_DEBUG := -g -DDEBUG -std=c++11
 CXXFLAGS_TIME := -DTIME
 CXXFLAGS_OPT := -O0
 CXXFLAGS_OPENMP := -fopenmp

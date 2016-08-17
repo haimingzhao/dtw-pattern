@@ -46,70 +46,73 @@ void DTW::run(double *S, double *T, const int ns, const int nt){
     }
 }
 
-void DTW::printC(){
-    cout << "C:" << endl;
-    for (int i = 0; i < nx; ++i) {
-        for (int j = 0; j < ny; ++j) {
-            cout << C[getIndex(i,j)] << " ";
-        }
-        cout << endl;
-    }
+void DTW::run(std::vector<double> a, std::vector<double> b) {
+    run(&a[0], &b[0], (const int)a.size(), (const int)b.size());
 }
 
-void DTW::printD(){
-    cout << "D:" << endl;
-    for (int i = 0; i < nx; ++i) {
-        for (int j = 0; j < ny; ++j) {
-            cout << D[getIndex(i,j)] << " ";
-        }
-        cout << endl;
-    }
-}
-
-// assuming the time series is store vertically in
-vector<double> DTW::readSeries(string filename) {
-//    ifstream file(filename);
-//    while(getline(file,line))
-//    {
-//        ++numline;
-//    }
+// assuming the time series is store vertically in csv
+// specify start row and column number
+// row and col start from 1
+std::vector<double> DTW::readSeries(std::string filename, int row, int col) {
     vector<double> values;
     ifstream file(filename);
     if (file)
     {
-        // use boost
+        // use boost tokenizer
         typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
         boost::char_separator<char> sep(",");
         string line;
 
-        while (getline(file, line))
-        {
-            Tokenizer info(line, sep);   // tokenize the line of data
-            vector<double> values;
+        int rowc = 1; // row start from 1
 
-            for (Tokenizer::iterator it = info.begin(); it != info.end(); ++it)
-            {
-                // convert data into double value, and store
-                values.push_back(strtod(it->c_str(), 0));
+        while (getline(file, line)) {
+            if(rowc >= row){
+                Tokenizer data(line, sep);   // tokenize the line of data
+                Tokenizer::iterator it = data.begin(); // iterator of the line of data
+                int colc = 1; // column counter
+
+                while(it != data.end() && colc <= col) {
+                    if (colc==col){
+                        // convert string into double value and store
+                        values.push_back(strtod(it->c_str(), 0));
+                    }
+                    ++colc;
+                    ++it;
+                }
             }
-
-            // store array of values
-            values.push_back(values);
+            ++rowc;
         }
-    }
-    else
-    {
+    } else {
         cerr << "Error: File not exist or cannot open: " << filename << endl;
-        return null;
+        return {};
     }
+//    // test
+//    cout << "test values read: ";
+//    for (auto i = values.begin(); i != values.end(); ++i)
+//        cout << *i << ' ';
+//    cout << endl;
 
     return values;
 }
 
-void DTW::writeC(string filename) {
-
+void DTW::printMatrix(double *M, string title) {
+    cout << title << ": " << endl;
+    for (int i = 0; i < nx; ++i) {
+        for (int j = 0; j < ny; ++j) {
+            cout << M[getIndex(i,j)] << " ";
+        }
+        cout << endl;
+    }
 }
 
-void DTW::writeD(string filename) {
-
+bool DTW::writeMatrix(double *M, std::string filename) {
+    ofstream fout(filename);
+    for (int i = 0; i < nx; ++i) {
+        for (int j = 0; j < ny; ++j) {
+            fout << M[getIndex(i,j)] << ", ";
+        }
+        fout << "\n";
+    }
+    fout.close();
+    return true;
 }
