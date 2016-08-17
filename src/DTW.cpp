@@ -3,6 +3,8 @@
 //
 #include "DTW.h"
 
+using namespace std;
+
 inline int DTW::getIndex(int i, int j) {
     return i*this->ny + j;
 }
@@ -64,14 +66,44 @@ void DTW::printD(){
     }
 }
 
-vector DTW::readSeries(string filename) {
+// assuming the time series is store vertically in
+vector<double> DTW::readSeries(string filename) {
 //    ifstream file(filename);
 //    while(getline(file,line))
 //    {
 //        ++numline;
 //    }
+    vector<double> values;
+    ifstream file(filename);
+    if (file)
+    {
+        // use boost
+        typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
+        boost::char_separator<char> sep(",");
+        string line;
 
-    return std::vector();
+        while (getline(file, line))
+        {
+            Tokenizer info(line, sep);   // tokenize the line of data
+            vector<double> values;
+
+            for (Tokenizer::iterator it = info.begin(); it != info.end(); ++it)
+            {
+                // convert data into double value, and store
+                values.push_back(strtod(it->c_str(), 0));
+            }
+
+            // store array of values
+            values.push_back(values);
+        }
+    }
+    else
+    {
+        cerr << "Error: File not exist or cannot open: " << filename << endl;
+        return null;
+    }
+
+    return values;
 }
 
 void DTW::writeC(string filename) {

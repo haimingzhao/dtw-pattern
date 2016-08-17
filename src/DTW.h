@@ -10,11 +10,11 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <bits/stl_bvector.h>
+#include <vector>
+#include <boost/tokenizer.hpp>
 
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
 
-using namespace std;
 
 class DTW {
     int nx, ny;
@@ -34,9 +34,9 @@ public:
     void printD();
 
     // read write CSV file
-    vector readSeries(string filename);
-    void writeC(string filename);
-    void writeD(string filename);
+    std::vector<double> readSeries(std::string filename);
+    void writeC(std::string filename);
+    void writeD(std::string filename);
 
 };
 

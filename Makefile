@@ -40,6 +40,15 @@ LD := $(CXX)
 # CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_TIME) $(CPPFLAGS) -I$(CUDA_DIR)/include
 CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_DEBUG) $(CXXFLAGS_TIME) $(CPPFLAGS) -I$(CUDA_DIR)/include
 
+# include paths
+OS := $(shell uname)
+ifeq ($(OS), Darwin)
+# Run MacOS commands
+    CXXINCLUDES:= -I/usr/local/Cellar/boost/1.59.0/include/
+else
+# check for Linux and run other commands
+endif
+
 # add openmp flags (comment out for serial build)
 #CXXFLAGS += $(CXXFLAGS_OPENMP)
 #LDFLAGS += $(CXXFLAGS_OPENMP)
