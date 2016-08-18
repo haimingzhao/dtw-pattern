@@ -1,5 +1,5 @@
 #include <iostream>
-#include "DTW.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -18,15 +18,15 @@ int main() {
 //    double X[10] = {1,2,3,2,4,5,7,8,6,5};
 //    double Y[10] = {4,5,7,8,6,5,1,2,3};
 
-    vector<double> a = DTW::readSeries("data/small.csv", 2, 1);
-    vector<double> b = DTW::readSeries("data/small.csv", 2, 2);
+    vector<double> a = Util::readSeries("data/small.csv", 2, 1);
+    vector<double> b = Util::readSeries("data/small.csv", 2, 2);
 
-    DTW d;
-    d.run(a, b);
-    d.printMatrix(d.getC(), "C");
-    d.printMatrix(d.getD(), "D");
-    d.writeMatrix(d.getD(), "out/D.csv");
-    //DTW::readSeries("data/advertising-and-sales-data-36-co.csv", 2, 2);
+    Util d;
+    d.dtw(a, b);
+    Util::printMatrix(d.getC(), a.size(), b.size(), "C");
+    Util::printMatrix(d.getD(), a.size(), b.size(), "D");
+    Util::writeMatrix(d.getD(), a.size(), b.size(), "out/D.csv");
+    //Util::readSeries("data/advertising-and-sales-data-36-co.csv", 2, 2);
 
     return 0;
 }

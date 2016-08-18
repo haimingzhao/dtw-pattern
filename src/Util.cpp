@@ -1,27 +1,27 @@
 //
 // Created by u1590812 on 12/08/16.
 //
-#include "DTW.h"
+#include "Util.h"
 
 using namespace std;
 
-inline int DTW::getIndex(int i, int j) {
+inline int Util::getIndex(size_t i, size_t j) {
     return i*this->ny + j;
 }
 
-double DTW::cost(const double &x, const double &y ){
+double Util::cost(const double &x, const double &y ){
     return std::abs(x-y);
 }
 
-void DTW::run(double *S, double *T, const int ns, const int nt){
+void Util::dtw(double *S, double *T, size_t ns, size_t nt){
     this->nx = ns;
     this->ny = nt;
-    C = new double[ns*nt];
-    D = new double[ns*nt];
+    C = new double[nx*ny];
+    D = new double[nx*ny];
 
     // cost matrix
-    for (int i = 0; i < ns; ++i) {
-        for (int j = 0; j < nt; ++j) {
+    for (int i = 0; i < nx; ++i) {
+        for (int j = 0; j < ny; ++j) {
             C[getIndex(i,j)] = cost(S[i], T[j]);
         }
     }
@@ -29,15 +29,15 @@ void DTW::run(double *S, double *T, const int ns, const int nt){
     // init
     D[0] = C[0];
 
-    for (int i = 1; i < ns; ++i) {
+    for (int i = 1; i < nx; ++i) {
         D[getIndex(i,0)] = C[getIndex(i,0)] + D[getIndex(i-1,0)];
     }
-    for (int j = 1; j < nt; ++j) {
+    for (int j = 1; j < ny; ++j) {
         D[getIndex(0,j)] = C[getIndex(0,j)] + D[getIndex(0,j-1)];
     }
 
-    for (int i = 1; i < ns; ++i) {
-        for (int j = 1; j < nt; ++j) {
+    for (int i = 1; i < nx; ++i) {
+        for (int j = 1; j < ny; ++j) {
             D[getIndex(i,j)] = C[getIndex(i,j)] +
                                min3( D[getIndex(i-1,j-1)],
                                      D[getIndex(i,  j-1)],
@@ -46,14 +46,14 @@ void DTW::run(double *S, double *T, const int ns, const int nt){
     }
 }
 
-void DTW::run(std::vector<double> a, std::vector<double> b) {
-    run(&a[0], &b[0], (const int)a.size(), (const int)b.size());
+void Util::dtw(std::vector<double> a, std::vector<double> b) {
+    dtw(&a[0], &b[0], a.size(), b.size());
 }
 
 // assuming the time series is store vertically in csv
 // specify start row and column number
 // row and col start from 1
-std::vector<double> DTW::readSeries(std::string filename, int row, int col) {
+std::vector<double> Util::readSeries(std::string filename, int row, int col) {
     vector<double> values;
     ifstream file(filename);
     if (file)
@@ -95,7 +95,7 @@ std::vector<double> DTW::readSeries(std::string filename, int row, int col) {
     return values;
 }
 
-void DTW::printMatrix(double *M, string title) {
+void Util::printMatrix(double *M, size_t nx, size_t ny, string title) {
     cout << title << ": " << endl;
     for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < ny; ++j) {
@@ -105,7 +105,7 @@ void DTW::printMatrix(double *M, string title) {
     }
 }
 
-bool DTW::writeMatrix(double *M, std::string filename) {
+bool Util::writeMatrix(double *M, size_t nx, size_t ny, std::string filename) {
     ofstream fout(filename);
     for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < ny; ++j) {
@@ -115,4 +115,8 @@ bool DTW::writeMatrix(double *M, std::string filename) {
     }
     fout.close();
     return true;
+}
+
+void Util::dtwm(std::vector<double> a, std::vector<double> b) {
+
 }
