@@ -22,6 +22,10 @@ private:
     std::vector<double> X;
     std::vector<double> Y;
 
+    // todo thresholds
+    double t;   // minimum threshold for average cost
+    size_t o, w; // threshold for o: diagonal offset, w: window for report length
+
     // Matrices: 1D array to sim 2D array
     double* C; // Cost matrix
     double* D; // DTW matrix

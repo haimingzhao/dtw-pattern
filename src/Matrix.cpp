@@ -4,6 +4,11 @@
 
 #include "Matrix.h"
 
+// todo where should I put this
+#define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
+
+double inf = std::numeric_limits<double>::infinity();
+
 inline int Matrix::getIndex(size_t i, size_t j) {
     return i*this->ny + j;
 }
@@ -15,6 +20,8 @@ Matrix::Matrix(const std::string datafile): datafile(datafile){
     Y = Util::readSeries(datafile, 2, 2);
     nx = X.size();
     ny = Y.size();
+
+    // todo read t, o, w
 
     allocate();
 }
@@ -37,6 +44,7 @@ double Matrix::getCost(size_t i, size_t j) {
 }
 
 void Matrix::init() {
+
     // cost matrix
     for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < ny; ++j) {
@@ -49,7 +57,6 @@ void Matrix::init() {
             Rli[getIndex(i,j)] = -1;// not start of path
             Rlj[getIndex(i,j)] = -1;// not start of path
 
-
         }
     }
 
@@ -57,36 +64,31 @@ void Matrix::init() {
 
 
 void Matrix::run() {
-    // cost matrix
-    for (int i = 0; i < nx; ++i) {
-        for (int j = 0; j < ny; ++j) {
-            C[getIndex(i,j)] = getCost(i, j);
-        }
-    }
-
-    // init all D to inf so that it automatically
+    // initialise all matrices
+    init();
 
     for (int i = 0; i < nx; ++i) {
         for (int j = 0; j < ny; ++j) {
-            D[getIndex(i,j)] = inf;
-        }
-    }
+            double minpre;
+            size_t mini, minj;
+            if (i==0 || j ==0){
+                minpre = 0;
+                mini = i; minj = j;
+            } else{
+                minpre = min3( [D[getIndex(i-1,j-1)], D(i-1,j), D(i,j-1)] ) ;
 
-//    D[0] = C[0] or 0; // ??
-
-    for (int i = 1; i < nx; ++i) {
-        D[getIndex(i,0)] = C[getIndex(i,0)] + D[getIndex(i-1,0)];
-    }
-    for (int j = 1; j < ny; ++j) {
-        D[getIndex(0,j)] = C[getIndex(0,j)] + D[getIndex(0,j-1)];
-    }
-
-    for (int i = 1; i < nx; ++i) {
-        for (int j = 1; j < ny; ++j) {
-            D[getIndex(i,j)] = C[getIndex(i,j)] +
-                               min3( D[getIndex(i-1,j-1)],
-                                     D[getIndex(i,  j-1)],
-                                     D[getIndex(i-1,j  )] );
+                if minpre == D(i-1,j-1)
+                mini = i-1;
+                minj = j-1;
+                elseif minpre == D(i-1,j)
+                mini = i-1;
+                minj = j;
+                else
+                mini = i;
+                minj = j-1;
+                end
+            }
+            double dtwm = (minpre + C[getIndex(i,j)]) / (L[getIndex(mini, minj)] + 1) ;
         }
     }
 
