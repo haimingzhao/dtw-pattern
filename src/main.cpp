@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Util.h"
+#include "Matrix.h"
 
 using namespace std;
 
@@ -18,15 +19,23 @@ int main() {
 //    double X[10] = {1,2,3,2,4,5,7,8,6,5};
 //    double Y[10] = {4,5,7,8,6,5,1,2,3};
 
-    vector<double> a = Util::readSeries("data/small.csv", 2, 1);
-    vector<double> b = Util::readSeries("data/small.csv", 2, 2);
+//    vector<double> a = Util::readSeries("data/small.csv", 2, 1);
+//    vector<double> b = Util::readSeries("data/small.csv", 2, 2);
 
-    Util d;
-    d.dtw(a, b);
-    Util::printMatrix(d.getC(), a.size(), b.size(), "C");
-    Util::printMatrix(d.getD(), a.size(), b.size(), "D");
-    Util::writeMatrix(d.getD(), a.size(), b.size(), "out/D.csv");
+    Matrix* m = new Matrix("data/internet.csv");
+    cout <<"Read file to matrix"<< endl;
+    cout << m->getNx() << " " << m->getNy() << endl;
+
+    m->runAll(1.2e+10, 15, 20);
+    cout <<"finished run"<< endl;
+
+    Util::writeMatrix(m->getC(), m->getNx(), m->getNy(), "out/C.csv");
+    Util::writeMatrix(m->getD(), m->getNx(), m->getNy(), "out/D.csv");
+    Util::writeMatrixBool(m->getP(), m->getNx(), m->getNy(), "out/P.csv");
     //Util::readSeries("data/advertising-and-sales-data-36-co.csv", 2, 2);
 
+    cout <<"Written to file"<< endl;
+
+    cout << m->X[0]<< " " << m->X[1] <<
     return 0;
 }
