@@ -2,6 +2,12 @@
 // Created by u1590812 on 18/08/16.
 //
 
+#include <stdlib.h>
+#include <limits>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <boost/tokenizer.hpp>
 #include "Matrix.h"
 
 // todo where should I put this
@@ -13,11 +19,42 @@ inline int Matrix::getIndex(size_t i, size_t j) {
     return i*this->ny + j;
 }
 
+void Matrix::readSeries(const std::string datafile, int start_row) {
+
+    std::ifstream file(datafile);
+    if (file) {
+        // use boost tokenizer
+        typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+        boost::char_separator<char> sep(",");
+        std::string line;
+
+        int rowc = 1; // row start from 1
+
+        while (getline(file, line)) {
+            if (rowc >= start_row) {
+                Tokenizer tokens(line, sep);   // tokenize the line of data
+                Tokenizer::iterator it = tokens.begin(); // iterator of the line of data
+
+                if(line[0]!=','){
+                    X.push_back(strtod(it->c_str(), 0));
+                    ++it;
+                }
+                if (it != tokens.end()){
+                    Y.push_back(strtod(it->c_str(), 0));
+                }
+
+            }
+            ++rowc;
+        }
+    } else {
+        std::cerr << "Error: File not exist or cannot open: " << datafile << std::endl;
+    }
+}
+
 Matrix::Matrix(const std::string datafile): datafile(datafile){
     allocated = false;
 
-    X = Util::readSeries(datafile, 2, 1);
-    Y = Util::readSeries(datafile, 2, 2);
+    readSeries(datafile, 2);
     nx = X.size();
     ny = Y.size();
 

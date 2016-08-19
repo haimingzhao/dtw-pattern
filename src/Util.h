@@ -6,12 +6,10 @@
 #define DTWM_UTIL_H
 
 #include <stdlib.h>
-#include <cmath>
-#include <iostream>
-#include <string>
-#include <fstream>
+
 #include <vector>
-#include <boost/tokenizer.hpp>
+#include <string>
+
 
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
 

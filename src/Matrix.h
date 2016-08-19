@@ -8,8 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "Util.h"
-
 // macro to get the 1D index from 2D index
 //#define getIndex(i, j, ny) (i*ny + j)
 
@@ -34,10 +32,11 @@ public:
 
     inline int getIndex(size_t i, size_t j);
 
+    void readSeries(const std::string datafile, int start_row);
+
     void allocate();
     bool allocated;
     double getCost(size_t i, size_t j); // calculate the cost of position i, j
-
 
 public:
     Matrix(const std::string datafile);

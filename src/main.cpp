@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Util.h"
 #include "Matrix.h"
+#include <boost/tokenizer.hpp>
 
 using namespace std;
 
@@ -36,6 +37,9 @@ int main() {
 
     cout <<"Written to file"<< endl;
 
-    cout << m->X[0]<< " " << m->X[1] <<
+    cout << m->X[107]<< " " << m->X[108] << endl;
+    cout << m->Y[109]<< " " << m->Y[110] << endl;
+
+
     return 0;
 }
