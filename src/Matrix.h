@@ -28,15 +28,22 @@ public:
     size_t* Rsj; // Region marking matrix start position j
     size_t* Rli; // Region marking matrix last position i
     size_t* Rlj; // Region marking matrix last position j
-    bool*   P;  // report Paths
 
-    inline int getIndex(size_t i, size_t j);
+    size_t* Pi; // Path marking storing previous position i
+    size_t* Pj; // Path marking storing previous position i
+
+    bool *visited; // helper Matrix for storing marked path
+    bool*   OP;  // report optimal paths
+
+    inline size_t getIndex(size_t i, size_t j);
 
     void readSeries(const std::string datafile, int start_row);
 
     void allocate();
     bool allocated;
     double getCost(size_t i, size_t j); // calculate the cost of position i, j
+
+    void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
 public:
     Matrix(const std::string datafile);
@@ -47,7 +54,7 @@ public:
     double *getC() const { return C; }
     double *getD() const { return D; }
     size_t *getL() const { return L; }
-    bool *getP() const { return P; }
+    bool *getOP() const { return OP; }
 
     // the 3 method to run
     void init();
@@ -59,6 +66,7 @@ public:
     void findPath(size_t w); // w: threshold for o: diagonal offset, w: window for report length
 
     void runAll(double t, size_t o, size_t w);
+
 };
 
 

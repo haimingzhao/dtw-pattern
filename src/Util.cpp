@@ -133,3 +133,15 @@ bool Util::writeMatrixBool(bool *M, size_t nx, size_t ny, std::string filename) 
     fout.close();
     return true;
 }
+
+bool Util::writeMatrixSizet(size_t *M, size_t nx, size_t ny, std::string filename) {
+    ofstream fout(filename);
+    for (int i = 0; i < nx; ++i) {
+        for (int j = 0; j < ny; ++j) {
+            fout << M[i*ny + j] << ", ";
+        }
+        fout << "\n";
+    }
+    fout.close();
+    return true;
+}

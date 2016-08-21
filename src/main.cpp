@@ -24,22 +24,23 @@ int main() {
 //    vector<double> b = Util::readSeries("data/small.csv", 2, 2);
 
     Matrix* m = new Matrix("data/internet.csv");
+//    Matrix* m = new Matrix("data/small.csv");
     cout <<"Read file to matrix"<< endl;
     cout << m->getNx() << " " << m->getNy() << endl;
 
-    m->runAll(1.2e+10, 15, 20);
+    m->runAll(1.2e10, 15, 20);
+//    m->runAll(1, 2, 2);
     cout <<"finished run"<< endl;
 
     Util::writeMatrix(m->getC(), m->getNx(), m->getNy(), "out/C.csv");
     Util::writeMatrix(m->getD(), m->getNx(), m->getNy(), "out/D.csv");
-    Util::writeMatrixBool(m->getP(), m->getNx(), m->getNy(), "out/P.csv");
-    //Util::readSeries("data/advertising-and-sales-data-36-co.csv", 2, 2);
+    Util::writeMatrixSizet(m->getL(), m->getNx(), m->getNy(), "out/L.csv");
+    Util::writeMatrixBool(m->getOP(), m->getNx(), m->getNy(), "out/OP.csv");
 
     cout <<"Written to file"<< endl;
 
-    cout << m->X[107]<< " " << m->X[108] << endl;
-    cout << m->Y[109]<< " " << m->Y[110] << endl;
-
+//    double inf = std::numeric_limits<double>::infinity();
+//    cout << min(min(inf, inf), 0.0) << endl;
 
     return 0;
 }

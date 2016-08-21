@@ -26,7 +26,7 @@ subplot(5,6,[2:6, 8:12, 14:18, 20:24 ]);
 imagesc(flipud(C(:, 1:end-1)));
 colorbar();
 set(gca, 'YDir', 'reverse'); 
-title('Matrix C');
+title(cfile);
 
 % plot D matrix
 figure;
@@ -36,7 +36,7 @@ subplot(5,5,22:25); plot(b); axis tight;
 subplot(5,5,[2:5, 7:10, 12:15, 17:20 ]);
 imagesc(flipud(D(:, 1:end-1)));
 set(gca, 'YDir', 'reverse');
-title('Matrix D');
+title(dfile);
 
 
 % run it like

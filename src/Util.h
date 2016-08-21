@@ -41,6 +41,7 @@ public:
     static void printMatrix(double *M, size_t nx, size_t ny, std::string title);
     static bool writeMatrix(double *M, size_t nx, size_t ny, std::string filename); // wt to CSV
     static bool writeMatrixBool(bool *M, size_t nx, size_t ny, std::string filename);
+    static bool writeMatrixSizet(size_t *M, size_t nx, size_t ny, std::string filename);
 
     // read CSV file for time series
     static std::vector<double> readSeries(std::string filename, int row, int col);
