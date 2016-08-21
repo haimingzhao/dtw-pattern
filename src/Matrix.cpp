@@ -59,11 +59,10 @@ Matrix::Matrix(const std::string datafile): datafile(datafile){
     readSeries(datafile, 2);
     nx = X.size();
     ny = Y.size();
-
-    allocate();
 }
 
 void Matrix::allocate() {
+    std::cout << "Matrix allocate" << std::endl;
     // allocate matrix
     C = new double[nx*ny]; // Cost matrix
     D = new double[nx*ny]; // DTW matrix
@@ -103,16 +102,15 @@ void Matrix::init() {
     }
 }
 
-
 void Matrix::dtwm(double t, size_t o) {
     for (size_t i = 0; i < nx; ++i) {
         for (size_t j = 0; j < ny; ++j) {
             double minpre, dtwm;
-            size_t mini, minj;
+            size_t mini = i, minj = j;
 
             if ( i==0 || j==0 ){
                 minpre = 0.0;
-                mini = i; minj = j;
+//                mini = i; minj = j;
             } else{
                 minpre = std::min( std::min( D[getIndex(i-1,j-1)],
                                              D[getIndex(i-1,j  )] ),
@@ -214,13 +212,17 @@ void Matrix::findPath(size_t w) {
 }
 
 void Matrix::runAll(double t, size_t o, size_t w) {
-    init();     // initialise all matrices
-    std::cout <<"Initialised"<< std::endl;
+    allocate();
+    if (allocated){
+        init();     // initialise all matrices
+        std::cout <<"Initialised"<< std::endl;
 
-    dtwm(t, o); // run DTW modified method with cost threshold: t and path offset: o
-    std::cout <<"Solved Matrix"<< std::endl;
+        dtwm(t, o); // run DTW modified method with cost threshold: t and path offset: o
+        std::cout <<"Solved Matrix"<< std::endl;
 
-    findPath(w);// run find path an mark path with more than window threshold in P
-    std::cout <<"Traced back"<< std::endl;
-    // todo output P
+        findPath(w);// run find path an mark path with more than window threshold in P
+        std::cout <<"Traced back"<< std::endl;
+    }else{
+        std::cerr << "Could not allocate matrices." << std::endl;
+    }
 }

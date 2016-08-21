@@ -5,6 +5,7 @@
 #ifndef DTWM_MATRIX_H
 #define DTWM_MATRIX_H
 
+#include <stddef.h>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,7 @@
 //#define getIndex(i, j, ny) (i*ny + j)
 
 class Matrix {
-public:
+protected:
     const std::string datafile;
 
     // the 2 comparing time series
@@ -35,20 +36,21 @@ public:
     bool *visited; // helper Matrix for storing marked path
     bool*   OP;  // report optimal paths
 
-    inline size_t getIndex(size_t i, size_t j);
-
     void readSeries(const std::string datafile, int start_row);
 
-    void allocate();
     bool allocated;
-    double getCost(size_t i, size_t j); // calculate the cost of position i, j
+    virtual void allocate();
 
-    void markPath(size_t si, size_t sj, size_t li, size_t lj);
+    inline size_t getIndex(size_t i, size_t j);
+    virtual double getCost(size_t i, size_t j); // calculate the cost of position i, j
+
+    virtual void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
 public:
     Matrix(const std::string datafile);
+    virtual ~Matrix() { }
 
-    // getters
+// getters
     size_t getNx() const { return nx; }
     size_t getNy() const { return ny; }
     double *getC() const { return C; }
@@ -57,13 +59,13 @@ public:
     bool *getOP() const { return OP; }
 
     // the 3 method to run
-    void init();
+    virtual void init();
 
     //    double t:  minimum threshold for average cost
     //    size_t o:  threshold for o: diagonal offset,
-    void dtwm(double t, size_t o);
+    virtual void dtwm(double t, size_t o);
 
-    void findPath(size_t w); // w: threshold for o: diagonal offset, w: window for report length
+    virtual void findPath(size_t w); // w: threshold for o: diagonal offset, w: window for report length
 
     void runAll(double t, size_t o, size_t w);
 

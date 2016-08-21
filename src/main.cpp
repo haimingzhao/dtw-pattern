@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Util.h"
 #include "Matrix.h"
+#include "MatrixCuda.h"
 #include <boost/tokenizer.hpp>
 
 using namespace std;
@@ -15,32 +16,19 @@ using namespace std;
 
 int main() {
 
-//    int nx = 10;
-//    int ny = 9;
-//    double X[10] = {1,2,3,2,4,5,7,8,6,5};
-//    double Y[10] = {4,5,7,8,6,5,1,2,3};
-
-//    vector<double> a = Util::readSeries("data/small.csv", 2, 1);
-//    vector<double> b = Util::readSeries("data/small.csv", 2, 2);
-
-    Matrix* m = new Matrix("data/internet.csv");
-//    Matrix* m = new Matrix("data/small.csv");
-    cout <<"Read file to matrix"<< endl;
-    cout << m->getNx() << " " << m->getNy() << endl;
-
+    Matrix* m = new MatrixCuda("data/internet.csv");
     m->runAll(1.2e10, 15, 20);
+
+//    Matrix* m = new Matrix("data/small.csv");
 //    m->runAll(1, 2, 2);
-    cout <<"finished run"<< endl;
 
-    Util::writeMatrix(m->getC(), m->getNx(), m->getNy(), "out/C.csv");
-    Util::writeMatrix(m->getD(), m->getNx(), m->getNy(), "out/D.csv");
-    Util::writeMatrixSizet(m->getL(), m->getNx(), m->getNy(), "out/L.csv");
-    Util::writeMatrixBool(m->getOP(), m->getNx(), m->getNy(), "out/OP.csv");
 
-    cout <<"Written to file"<< endl;
+//    Util::writeMatrix(m->getC(), m->getNx(), m->getNy(), "out/C.csv");
+//    Util::writeMatrix(m->getD(), m->getNx(), m->getNy(), "out/D.csv");
+//    Util::writeMatrixSizet(m->getL(), m->getNx(), m->getNy(), "out/L.csv");
+//    Util::writeMatrixBool(m->getOP(), m->getNx(), m->getNy(), "out/OP.csv");
+//    cout <<"Written to file"<< endl;
 
-//    double inf = std::numeric_limits<double>::infinity();
-//    cout << min(min(inf, inf), 0.0) << endl;
-
+    delete m;
     return 0;
 }
