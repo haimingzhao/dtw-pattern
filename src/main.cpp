@@ -1,8 +1,6 @@
 #include <iostream>
-#include "Util.h"
 #include "Matrix.h"
 #include "MatrixCuda.h"
-#include <boost/tokenizer.hpp>
 
 using namespace std;
 

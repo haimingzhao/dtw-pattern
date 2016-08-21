@@ -4,11 +4,13 @@
 
 #include <stdlib.h>
 #include <limits>
-#include <cmath>
+//#include <cmath>
 #include <algorithm>
+#include <string.h>
 #include <fstream>
+#include <sstream>
 #include <iostream>
-#include <boost/tokenizer.hpp>
+//#include <boost/tokenizer.hpp>
 #include "Matrix.h"
 
 // todo where should I put this
@@ -25,26 +27,24 @@ void Matrix::readSeries(const std::string datafile, int start_row) {
 
     std::ifstream file(datafile);
     if (file) {
-        // use boost tokenizer
-        typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-        boost::char_separator<char> sep(",");
         std::string line;
 
         int rowc = 1; // row start from 1
 
         while (getline(file, line)) {
             if (rowc >= start_row) {
-                Tokenizer tokens(line, sep);   // tokenize the line of data
-                Tokenizer::iterator it = tokens.begin(); // iterator of the line of data
+                char delim = ',';
+                std::string tok;
+                std::istringstream input;
+                input.str(line);
+                std::getline(input, tok, delim);
 
                 if(line[0]!=','){
-                    X.push_back(strtod(it->c_str(), 0));
-                    ++it;
+                    X.push_back(strtod(tok.c_str(), 0 ));
                 }
-                if (it != tokens.end()){
-                    Y.push_back(strtod(it->c_str(), 0));
+                if(std::getline(input, tok, delim)){
+                    Y.push_back(strtod(tok.c_str(), 0 ));
                 }
-
             }
             ++rowc;
         }

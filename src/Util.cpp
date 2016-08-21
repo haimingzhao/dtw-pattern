@@ -6,7 +6,7 @@
 #include <iostream>
 
 #include <fstream>
-#include <boost/tokenizer.hpp>
+//#include <boost/tokenizer.hpp>
 
 using namespace std;
 
@@ -55,50 +55,50 @@ using namespace std;
 //    dtw(&a[0], &b[0], a.size(), b.size());
 //}
 
-// assuming the time series is store vertically in csv
-// specify start row and column number
-// row and col start from 1
-std::vector<double> Util::readSeries(std::string filename, int row, int col) {
-    vector<double> values;
-    ifstream file(filename);
-    if (file)
-    {
-        // use boost tokenizer
-        typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
-        boost::char_separator<char> sep(",");
-        string line;
-
-        int rowc = 1; // row start from 1
-
-        while (getline(file, line)) {
-            if(rowc >= row){
-                Tokenizer data(line, sep);   // tokenize the line of data
-                Tokenizer::iterator it = data.begin(); // iterator of the line of data
-                int colc = 1; // column counter
-
-                while(it != data.end() && colc <= col) {
-                    if (colc==col){
-                        // convert string into double value and store
-                        values.push_back(strtod(it->c_str(), 0));
-                    }
-                    ++colc;
-                    ++it;
-                }
-            }
-            ++rowc;
-        }
-    } else {
-        cerr << "Error: File not exist or cannot open: " << filename << endl;
-        return {};
-    }
-//    // test
-//    cout << "test values read: ";
-//    for (auto i = values.begin(); i != values.end(); ++i)
-//        cout << *i << ' ';
-//    cout << endl;
-
-    return values;
-}
+//// assuming the time series is store vertically in csv
+//// specify start row and column number
+//// row and col start from 1
+//std::vector<double> Util::readSeries(std::string filename, int row, int col) {
+//    vector<double> values;
+//    ifstream file(filename);
+//    if (file)
+//    {
+//        // use boost tokenizer
+//        typedef boost::tokenizer< boost::char_separator<char> > Tokenizer;
+//        boost::char_separator<char> sep(",");
+//        string line;
+//
+//        int rowc = 1; // row start from 1
+//
+//        while (getline(file, line)) {
+//            if(rowc >= row){
+//                Tokenizer data(line, sep);   // tokenize the line of data
+//                Tokenizer::iterator it = data.begin(); // iterator of the line of data
+//                int colc = 1; // column counter
+//
+//                while(it != data.end() && colc <= col) {
+//                    if (colc==col){
+//                        // convert string into double value and store
+//                        values.push_back(strtod(it->c_str(), 0));
+//                    }
+//                    ++colc;
+//                    ++it;
+//                }
+//            }
+//            ++rowc;
+//        }
+//    } else {
+//        cerr << "Error: File not exist or cannot open: " << filename << endl;
+//        return {};
+//    }
+////    // test
+////    cout << "test values read: ";
+////    for (auto i = values.begin(); i != values.end(); ++i)
+////        cout << *i << ' ';
+////    cout << endl;
+//
+//    return values;
+//}
 
 void Util::printMatrix(double *M, size_t nx, size_t ny, string title) {
     cout << title << ": " << endl;
