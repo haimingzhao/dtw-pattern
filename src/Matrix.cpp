@@ -56,7 +56,7 @@ Matrix::Matrix(const std::string datafile): datafile(datafile){
     nx = X.size();
     ny = Y.size();
 
-    allocate();
+    allocate(); // move to runAll
 }
 
 void Matrix::allocate() {

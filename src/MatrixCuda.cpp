@@ -11,6 +11,9 @@
 
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) );
 
+#define getI_bl(i,j, nx, ny) ((nx-(i-j)-1) < ny) ? ( (nx-(i-j)-1)*(nx-(i-j))/2 + j ):( (ny-1)*(ny)/2 + (nx-(i-j)- ny)*ny + j ) ;
+#define getI_ur(i,j, nx, ny, uj0) (ny<=nx) ? (uj0+(ny+ny-j+i+1)*(j-i)/2+i) : ( (j-i<=ny-nx)?(uj0+nx*(j-i)+i):(uj0+nx*(ny-nx)+(nx+ny-j+i+1)*(j-i-ny+nx)/2+i) );
+
 double cuda_inf = std::numeric_limits<double>::infinity();
 
 MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
@@ -25,25 +28,42 @@ MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
      * i is row -> X of length nx,
      * j is column -> Y of length ny
      * careful for size_t being unsigned */
-    size_t idx = 0;
-    for (size_t si = nx; si--; ) {
-        size_t i = si;
-        size_t j = 0 ;
-        while (i < nx && j < ny){
-            I[i][j] = idx;
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
-        }
-    }
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i =  0;
-        size_t j = sj;
-        while (i < nx && j < ny){
-            I[i][j] = idx;
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
+//    size_t idx = 0;
+//    for (size_t si = nx; si--; ) {
+//        size_t i = si;
+//        size_t j = 0 ;
+//        while (i < nx && j < ny){
+//            I[i][j] = idx;
+//            ++ idx;
+//            i = i + 1;
+//            j = j + 1;
+//        }
+//    }
+//    for (size_t sj = 1; sj < ny; ++sj) {
+//        size_t i =  0;
+//        size_t j = sj;
+//        while (i < nx && j < ny){
+//            I[i][j] = idx;
+//            ++ idx;
+//            i = i + 1;
+//            j = j + 1;
+//        }
+//    }
+
+    for (size_t i = 0; i < nx; ++i) {
+        for (size_t j = 0; j < ny; ++j) {
+            if ( i >= j ){
+                I[i][j] = getI_bl(i,j, nx, ny);
+//                size_t ui_ = nx - (i-j) - 1 ; // find the start diagonal up-size down index
+//                if (ui_+1  < ny){
+//                    I[i][j] = ui_ * (ui_ + 1)/2 + j ; //start diagonal arithmetic sequence plus j
+//                }else {
+//                    I[i][j] = (ny-1)*(ny)/2 + (ui_+1 - ny)*ny + j; //start diagonal arithmetic sequence and fill with ny plus j
+//                }
+            }else{
+                size_t uj0= getI_bl(0,0, nx, ny) ;
+                I[i][j] = getI_ur(i,j, nx, ny, uj0);
+            }
         }
     }
 
@@ -54,36 +74,6 @@ MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
         }
         std::cout << std::endl;
     }
-
-//    // TODO anti-diagonal calculation order put to kernel
-//    idx = 0;
-//    for (size_t si = 0; si < nx; ++si) {
-//        size_t i = si + 1; // because while loop has i--
-//        size_t j = 0 ;
-//        while (i-- && j < ny){
-//            d_index[i][j] = idx;
-//            j = j + 1;
-//            ++ idx;
-//        }
-//    }
-//
-//    for (size_t sj = 1; sj < ny; ++sj) {
-//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
-//        size_t j = sj ;
-//        while (i-- && j < ny){
-//            d_index[i][j] = idx;
-//            ++ idx;
-//            j = j + 1;
-//        }
-//    }
-//
-//    std::cout<< "indexes: " << std::endl;
-//    for (size_t i = 0; i < nx; ++i) {
-//        for (size_t j = 0; j < ny; ++j) {
-//            std::cout<< d_index[i][j] << " " ;
-//        }
-//        std::cout << std::endl;
-//    }
 
 }
 
@@ -115,6 +105,8 @@ void MatrixCuda::allocate() {
 #endif
 
     // allocate matrix
+    cudaMalloc(&I, (nx*ny)*sizeof(size_t));
+
     cudaMalloc(&C, (nx*ny)*sizeof(double));
     cudaMalloc(&D, (nx*ny)*sizeof(double));
 
@@ -196,22 +188,6 @@ void MatrixCuda::init() {
 //
 //    cudaFree(visited);
 //    cudaFree(OP);
-
-//    for (size_t i = 0; i < nx; ++i) {
-//        for (size_t j = 0; j < ny; ++j) {
-//            size_t idx = I[i][j];
-//            C[idx] = getCost(i, j);
-//            D[idx] = inf;
-////            L[getIndex(i,j)] = 0;   // zero length
-////            OP[getIndex(i,j)] = 0;   // default to false
-//            // todo : is this needed?
-////            Rsi[getIndex(i,j)] = 0;// not in path and not start of path
-////            Rsj[getIndex(i,j)] = 0;// not in path and not start of path
-////            Rli[getIndex(i,j)] = 0;// not start of path
-////            Rlj[getIndex(i,j)] = 0;// not start of path
-////            // Pi, Pj
-//        }
-//    }
 
     // todo anti diagonal cuda
     size_t idx;
