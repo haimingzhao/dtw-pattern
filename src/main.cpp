@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Matrix.h"
 #include "MatrixCuda.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -17,11 +18,12 @@ int main() {
 //    Matrix* m = new MatrixCuda("data/internet.csv");
 //    m->runAll(1.2e10, 15, 20);
 
-    Matrix* m = new MatrixCuda("data/small-d.csv");
+    Matrix* m = new Matrix("data/small-d.csv");
     m->runAll(1, 2, 2);
 
 
 //    Util::writeMatrix(m->getC(), m->getNx(), m->getNy(), "out/CUDA_C.csv");
+    Util::printMatrix(m->getC(), m->getNx(), m->getNy(), "C");
 //    Util::writeMatrix(m->getD(), m->getNx(), m->getNy(), "out/CUDA_D.csv");
 //    Util::writeMatrixSizet(m->getL(), m->getNx(), m->getNy(), "out/CUDA_L.csv");
 //    Util::writeMatrixBool(m->getOP(), m->getNx(), m->getNy(), "out/CUDA_OP.csv");

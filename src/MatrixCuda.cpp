@@ -5,11 +5,13 @@
 #include "MatrixCuda.h"
 
 #include <iostream>
+#include <limits>
+#include <math_constants.h>
 #include <cuda_runtime.h>
 
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) );
 
-double inf = std::numeric_limits<double>::infinity();
+double cuda_inf = std::numeric_limits<double>::infinity();
 
 MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
 
@@ -194,8 +196,46 @@ void MatrixCuda::init() {
 //
 //    cudaFree(visited);
 //    cudaFree(OP);
-    Matrix::init();
 
+//    for (size_t i = 0; i < nx; ++i) {
+//        for (size_t j = 0; j < ny; ++j) {
+//            size_t idx = I[i][j];
+//            C[idx] = getCost(i, j);
+//            D[idx] = inf;
+////            L[getIndex(i,j)] = 0;   // zero length
+////            OP[getIndex(i,j)] = 0;   // default to false
+//            // todo : is this needed?
+////            Rsi[getIndex(i,j)] = 0;// not in path and not start of path
+////            Rsj[getIndex(i,j)] = 0;// not in path and not start of path
+////            Rli[getIndex(i,j)] = 0;// not start of path
+////            Rlj[getIndex(i,j)] = 0;// not start of path
+////            // Pi, Pj
+//        }
+//    }
+
+    // todo anti diagonal
+    size_t idx;
+    for (size_t si = 0; si < nx; ++si) {
+        size_t i = si + 1; // because while loop has i--
+        size_t j = 0 ;
+        while (i-- && j < ny){
+            idx = I[i][j];
+            C[idx] = getCost(i, j);
+            D[idx] = cuda_inf;
+            j = j + 1;
+        }
+    }
+
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+        size_t j = sj ;
+        while (i-- && j < ny){
+            idx = I[i][j];
+            C[idx] = getCost(i, j);
+            D[idx] = cuda_inf;
+            j = j + 1;
+        }
+    }
 }
 
 void dtwm_task(double t, size_t o, size_t i, size_t j, size_t** I,
@@ -230,7 +270,7 @@ void dtwm_task(double t, size_t o, size_t i, size_t j, size_t** I,
             minj = j-1;
             min_idx = idx_l;
         }
-        if (minpre == inf){ minpre = 0.0; }
+        if (minpre == cuda_inf){ minpre = 0.0; }
     }
 
     // calculated average cost for the path adding the current cell
@@ -287,10 +327,8 @@ void MatrixCuda::dtwm(double t, size_t o) {
     std::cout <<"Cuda dtwm"<< std::endl;
     for (size_t i = 0; i < nx; ++i) {
         for (size_t j = 0; j < ny; ++j) {
-            bool isEdge = false;
-            if ( i==0 || j==0 ) isEdge = true;
-            dtwm_task(t, o, i, j, I,
-                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+//            dtwm_task(t, o, i, j, I,
+//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
         }
     }
 }

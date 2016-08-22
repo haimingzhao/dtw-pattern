@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+#include <limits>
 
 // macro to get the 1D index from 2D index
 //#define getIndex(i, j, ny) (i*ny + j)
@@ -41,10 +42,14 @@ protected:
     bool allocated;
     virtual void allocate();
 
-    inline size_t getIndex(size_t i, size_t j);
     virtual double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
     virtual void markPath(size_t si, size_t sj, size_t li, size_t lj);
+
+private:
+    double inf = std::numeric_limits<double>::infinity();
+
+    inline size_t getIndex(size_t i, size_t j);
 
 public:
     Matrix(const std::string datafile);

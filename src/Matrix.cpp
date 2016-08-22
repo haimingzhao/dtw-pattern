@@ -3,7 +3,7 @@
 //
 
 #include <stdlib.h>
-#include <limits>
+
 #include <algorithm>
 #include <string.h>
 #include <fstream>
@@ -14,8 +14,6 @@
 
 // todo where should I put this
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
-
-double inf = std::numeric_limits<double>::infinity();
 
 inline size_t Matrix::getIndex(size_t i, size_t j) {
     return i*ny + j;
