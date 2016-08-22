@@ -50,7 +50,7 @@ public:
     Matrix(const std::string datafile);
     virtual ~Matrix() { }
 
-// getters
+    // getters
     size_t getNx() const { return nx; }
     size_t getNy() const { return ny; }
     double *getC() const { return C; }

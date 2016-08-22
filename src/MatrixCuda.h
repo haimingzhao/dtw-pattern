@@ -14,6 +14,10 @@
 class MatrixCuda : public Matrix{
 private:
 
+    /* anti-diagonal indexes, 2D array corresponds to index in 1D array
+     * to store indexes for use of matrix stored in diagonal consecutive way */
+    size_t ** I;
+
     // device copy of data
     double* dX;
     double* dY;
@@ -22,7 +26,7 @@ private:
     void deallocate();
 
 //    inline size_t getIndex(size_t i, size_t j);
-    //double getCost(size_t i, size_t j); // calculate the cost of position i, j
+    double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
     void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
@@ -31,12 +35,12 @@ public:
     virtual ~MatrixCuda();
 
 // getters
-    size_t getNx() const { return nx; }
-    size_t getNy() const { return ny; }
-    double *getC() const { return C; }
-    double *getD() const { return D; }
-    size_t *getL() const { return L; }
-    bool *getOP() const { return OP; }
+//    size_t getNx() const { return nx; }
+//    size_t getNy() const { return ny; }
+//    double *getC() const { return C; }
+//    double *getD() const { return D; }
+//    size_t *getL() const { return L; }
+//    bool *getOP() const { return OP; }
 
     // the 3 method to run
     void init();
