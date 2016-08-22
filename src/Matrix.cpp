@@ -56,7 +56,7 @@ Matrix::Matrix(const std::string datafile): datafile(datafile){
     nx = X.size();
     ny = Y.size();
 
-    allocate(); // move to runAll
+//    allocate(); // move to runAll
 }
 
 void Matrix::allocate() {
@@ -210,7 +210,7 @@ void Matrix::findPath(size_t w) {
 }
 
 void Matrix::runAll(double t, size_t o, size_t w) {
-//    allocate();
+    allocate();
     if (allocated){
         init();     // initialise all matrices
         std::cout <<"Initialised"<< std::endl;

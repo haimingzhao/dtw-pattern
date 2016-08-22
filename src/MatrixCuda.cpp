@@ -54,12 +54,6 @@ MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
         for (size_t j = 0; j < ny; ++j) {
             if ( i >= j ){
                 I[i][j] = getI_bl(i,j, nx, ny);
-//                size_t ui_ = nx - (i-j) - 1 ; // find the start diagonal up-size down index
-//                if (ui_+1  < ny){
-//                    I[i][j] = ui_ * (ui_ + 1)/2 + j ; //start diagonal arithmetic sequence plus j
-//                }else {
-//                    I[i][j] = (ny-1)*(ny)/2 + (ui_+1 - ny)*ny + j; //start diagonal arithmetic sequence and fill with ny plus j
-//                }
             }else{
                 size_t uj0= getI_bl(0,0, nx, ny) ;
                 I[i][j] = getI_ur(i,j, nx, ny, uj0);
