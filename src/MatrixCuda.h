@@ -28,8 +28,6 @@ private:
 //    inline size_t getIndex(size_t i, size_t j);
     double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
-    void markPath(size_t si, size_t sj, size_t li, size_t lj);
-
 public:
     MatrixCuda(const std::string datafile);
     virtual ~MatrixCuda();

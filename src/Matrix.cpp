@@ -17,7 +17,6 @@
 
 inline size_t Matrix::getIndex(size_t i, size_t j) {
     return i*ny + j;
-//    return j*this->nx + i;
 }
 
 void Matrix::readSeries(const std::string datafile, int start_row) {

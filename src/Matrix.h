@@ -44,7 +44,7 @@ protected:
 
     virtual double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
-    virtual void markPath(size_t si, size_t sj, size_t li, size_t lj);
+    void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
 private:
     double inf = std::numeric_limits<double>::infinity();

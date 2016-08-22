@@ -213,7 +213,7 @@ void MatrixCuda::init() {
 //        }
 //    }
 
-    // todo anti diagonal
+    // todo anti diagonal cuda
     size_t idx;
     for (size_t si = 0; si < nx; ++si) {
         size_t i = si + 1; // because while loop has i--
@@ -238,22 +238,24 @@ void MatrixCuda::init() {
     }
 }
 
-void dtwm_task(double t, size_t o, size_t i, size_t j, size_t** I,
+/* We still need to pass i, j because we need to calculate distance form start cell */
+void dtwm_task(size_t i, size_t j, size_t** I, double t, size_t o,
                double* C, double* D, size_t* L,
                size_t* Rsi, size_t* Rsj, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj){
     double minpre, dtwm;
 
     size_t idx   = I[i  ][j  ];
-    size_t idx_d = I[i-1][j-1];
-    size_t idx_t = I[i-1][j  ];
-    size_t idx_l = I[i  ][j-1];
     size_t min_idx = idx;
     size_t mini = i; size_t minj = j;
 
-    if ( i==0 || j==0 ){
+    if ( i==0 || j==0 ){    // special case where index is 0 there is no previous
         minpre = 0.0;
 //      mini = i; minj = j;
     } else{
+        size_t idx_d = I[i-1][j-1];
+        size_t idx_t = I[i-1][j  ];
+        size_t idx_l = I[i  ][j-1];
+
         minpre = min3( D[idx_d], D[idx_t], D[idx_l] );
 
         // mini, minj are the index of the min previous cells
@@ -325,19 +327,72 @@ void dtwm_task(double t, size_t o, size_t i, size_t j, size_t** I,
 
 void MatrixCuda::dtwm(double t, size_t o) {
     std::cout <<"Cuda dtwm"<< std::endl;
-    for (size_t i = 0; i < nx; ++i) {
-        for (size_t j = 0; j < ny; ++j) {
-//            dtwm_task(t, o, i, j, I,
-//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+
+    // todo anti diagonal cuda
+    for (size_t si = 0; si < nx; ++si) {
+        size_t i = si + 1; // because while loop has i--
+        size_t j = 0 ;
+        while (i-- && j < ny){
+            dtwm_task(i, j, I, t, o,
+                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+            j = j + 1;
+        }
+    }
+
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+        size_t j = sj ;
+        while (i-- && j < ny){
+            dtwm_task(i, j, I, t, o,
+                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+            j = j + 1;
         }
     }
 }
 
-void MatrixCuda::findPath(size_t w) {
-    std::cout <<"Cuda findPath"<< std::endl;
+
+void findPath_task(size_t i, size_t j, size_t** I, size_t ny, size_t w,
+                   size_t* L, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj, bool* OP){
+    size_t idx = I[i][j];
+
+    size_t li = Rli[idx]; // Path end i, only stored in start cell
+    size_t lj = Rlj[idx]; // Path end j, only stored in start
+    size_t idx_l = I[li][lj];
+
+    // only look at start cells and end length longer than w, and mark the path
+    if (L[idx] == 1 && L[idx_l] > w){
+
+        while(li > i && lj > j){    // while the current last if further away from start
+            OP[li*ny + lj] = true;  // use normal horizontal indexing in report paths
+            size_t mi = Pi[idx_l];
+            size_t mj = Pj[idx_l];
+            li=mi;  lj=mj;          // has to do it this way, otherwise weird errors
+            idx_l = I[mi][mj];      // not forget to update idx_l as well
+        }
+        OP[li*ny + lj] = true;
+    }
 }
 
+void MatrixCuda::findPath(size_t w) {
 
-void MatrixCuda::markPath(size_t si, size_t sj, size_t li, size_t lj) {
-    std::cout <<"Cuda markPath"<< std::endl;
+    std::cout <<"Cuda findPath"<< std::endl;
+    for (size_t si = 0; si < nx; ++si) {
+        size_t i = si + 1; // because while loop has i--
+        size_t j = 0 ;
+        while (i-- && j < ny){
+            findPath_task(i,j, I, ny, w,
+                    L, Rli, Rlj, Pi, Pj, OP);
+            j = j + 1;
+        }
+    }
+
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+        size_t j = sj ;
+        while (i-- && j < ny){
+            findPath_task(i,j, I, ny, w,
+                          L, Rli, Rlj, Pi, Pj, OP);
+            j = j + 1;
+        }
+    }
 }
