@@ -155,11 +155,11 @@ double getCost(size_t i, size_t j, double* dX, double* dY){
 }
 
 __global__
-void initCuda(double* C, size_t *I, double* dX, double* dY, const size_t nx, const size_t ny) {
+void initCuda(size_t *I, double* C, double* dX, double* dY, const size_t nx, const size_t ny) {
     const size_t global_index = (blockDim.x * blockIdx.x) + threadIdx.x;
     if (global_index < nx*ny){
-        const size_t i = global_index / nx;
-        const size_t j = global_index % nx;
+        const size_t i = global_index / ny;
+        const size_t j = global_index % ny;
 
         // calculate anti diagnonal index using derived function in macro
         if ( i >= j ){
@@ -171,10 +171,8 @@ void initCuda(double* C, size_t *I, double* dX, double* dY, const size_t nx, con
 
         // calculate cost matrix using the anti diagonal index just got
         size_t idx = I[i*ny+ j];
-//        C[idx] = getCost(i, j, dX, dY);
-        C[idx] = idx;
+        C[idx] = getCost(i, j, dX, dY);
     }
-
 }
 
 void MatrixCuda::init() {
@@ -194,12 +192,12 @@ void MatrixCuda::init() {
     cudaMemset(visited, 0, (nx*ny)*sizeof(bool)); // init visited to 0 (false)
     cudaMemset(OP,      0, (nx*ny)*sizeof(bool)); // init OptimalPath marks to 0 (false)
 
-    /* TODO initialise anti-diagonal coordinate arrays */
-    // todo put anti diagnoal index in I
+
+    // CUDA calculate anti-diagonal index in I and calculate cost in parallel for all cells
     const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
 
-    initCuda<<<num_blocks, BLOCK_SIZE>>>(C, I, dX, dY, nx, ny);
-//    size_t idx;
+    initCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, dX, dY, nx, ny);
+/*//    size_t idx;
 //    for (size_t i = 0; i < nx; ++i) {
 //        for (size_t j = 0; j < ny; ++j) {
 //            if ( i >= j ){
@@ -243,13 +241,18 @@ void MatrixCuda::init() {
 //            D[idx] = cuda_inf;
 //            j = j + 1;
 //        }
-//    }
+//    }*/
 }
 
-/* We still need to pass i, j because we need to calculate distance form start cell */
-void dtwm_task(size_t i, size_t j, size_t** I, double t, size_t o,
-               double* C, double* D, size_t* L,
-               size_t* Rsi, size_t* Rsj, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj){
+
+/* sub function to call for calculating individual cells
+ * We still need to pass i
+ * because we need to calculate distance form start cell in dtwm_task */
+__device__
+void dtwm_task(size_t i, size_t j,
+               size_t** I, double* C, double* D, size_t* L,
+               size_t* Rsi, size_t* Rsj, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj,
+               double t, size_t o){
     double minpre, dtwm;
 
     size_t idx   = I[i  ][j  ];
@@ -333,10 +336,26 @@ void dtwm_task(size_t i, size_t j, size_t** I, double t, size_t o,
     }
 }
 
-void MatrixCuda::dtwm(double t, size_t o) {
-    std::cout <<"Cuda dtwm"<< std::endl;
+__global__
+void dtwmCuda(size_t** I, double* C, double* D, size_t* L,
+              size_t* Rsi, size_t* Rsj, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj,
+              double t, size_t o, const size_t nx, const size_t ny){
+    const size_t tid = (blockDim.x * blockIdx.x) + threadIdx.x;
+    if (tid < ny){
+        __syncthreads(); //todo: it maynot be needed
+        for (size_t si = 0; si < nx; ++si) {
 
-    // todo anti diagonal cuda
+//            dtwm_task(i, j, I, t, o,
+//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+            __syncthreads();
+        }
+        for (size_t sj = 1; sj < ny; ++sj) {
+//            dtwm_task(i, j, I, t, o,
+//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+            __syncthreads();
+        }
+    } // run total for nx+ny-1 times in parallel
+
 //    for (size_t si = 0; si < nx; ++si) {
 //        size_t i = si + 1; // because while loop has i--
 //        size_t j = 0 ;
@@ -358,7 +377,36 @@ void MatrixCuda::dtwm(double t, size_t o) {
 //    }
 }
 
+void MatrixCuda::dtwm(double t, size_t o) {
+    std::cout <<"Cuda dtwm"<< std::endl;
 
+    // run CUDA in parallel in an anti-diagonal strip way
+    const size_t num_blocks = (ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
+
+    dtwmCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj, t, o);
+
+/*//    for (size_t si = 0; si < nx; ++si) {
+//        size_t i = si + 1; // because while loop has i--
+//        size_t j = 0 ;
+//        while (i-- && j < ny){
+//            dtwm_task(i, j, I, t, o,
+//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+//            j = j + 1;
+//        }
+//    }
+//
+//    for (size_t sj = 1; sj < ny; ++sj) {
+//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+//        size_t j = sj ;
+//        while (i-- && j < ny){
+//            dtwm_task(i, j, I, t, o,
+//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+//            j = j + 1;
+//        }
+//    }*/
+}
+
+__device__
 void findPath_task(size_t i, size_t j, size_t** I, size_t ny, size_t w,
                    size_t* L, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj, bool* OP){
     size_t idx = I[i][j];

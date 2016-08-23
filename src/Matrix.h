@@ -54,10 +54,10 @@ public:
     // getters
     size_t getNx() const { return nx; }
     size_t getNy() const { return ny; }
-    virtual double *getC() const { return C; }
-    virtual double *getD() const { return D; }
-    virtual size_t *getL() const { return L; }
-    virtual bool *getOP() const { return OP; }
+    virtual double *getC() { return C; }
+    virtual double *getD() { return D; }
+    virtual size_t *getL() { return L; }
+    virtual bool *getOP() { return OP; }
 
     // the 3 method to run
     virtual void init();
