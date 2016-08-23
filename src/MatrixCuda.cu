@@ -171,8 +171,10 @@ void initCuda(double* C, size_t *I, double* dX, double* dY, const size_t nx, con
 
         // calculate cost matrix using the anti diagonal index just got
         size_t idx = I[i*ny+ j];
-        C[idx] = getCost(i, j, dX, dY);
+//        C[idx] = getCost(i, j, dX, dY);
+        C[idx] = idx;
     }
+
 }
 
 void MatrixCuda::init() {
@@ -335,25 +337,25 @@ void MatrixCuda::dtwm(double t, size_t o) {
     std::cout <<"Cuda dtwm"<< std::endl;
 
     // todo anti diagonal cuda
-    for (size_t si = 0; si < nx; ++si) {
-        size_t i = si + 1; // because while loop has i--
-        size_t j = 0 ;
-        while (i-- && j < ny){
-            dtwm_task(i, j, I, t, o,
-                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
-            j = j + 1;
-        }
-    }
-
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
-        size_t j = sj ;
-        while (i-- && j < ny){
-            dtwm_task(i, j, I, t, o,
-                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
-            j = j + 1;
-        }
-    }
+//    for (size_t si = 0; si < nx; ++si) {
+//        size_t i = si + 1; // because while loop has i--
+//        size_t j = 0 ;
+//        while (i-- && j < ny){
+//            dtwm_task(i, j, I, t, o,
+//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+//            j = j + 1;
+//        }
+//    }
+//
+//    for (size_t sj = 1; sj < ny; ++sj) {
+//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+//        size_t j = sj ;
+//        while (i-- && j < ny){
+//            dtwm_task(i, j, I, t, o,
+//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+//            j = j + 1;
+//        }
+//    }
 }
 
 
@@ -382,23 +384,122 @@ void findPath_task(size_t i, size_t j, size_t** I, size_t ny, size_t w,
 void MatrixCuda::findPath(size_t w) {
 
     std::cout <<"Cuda findPath"<< std::endl;
-    for (size_t si = 0; si < nx; ++si) {
-        size_t i = si + 1; // because while loop has i--
-        size_t j = 0 ;
-        while (i-- && j < ny){
-            findPath_task(i,j, I, ny, w,
-                    L, Rli, Rlj, Pi, Pj, OP);
-            j = j + 1;
-        }
-    }
+//    for (size_t si = 0; si < nx; ++si) {
+//        size_t i = si + 1; // because while loop has i--
+//        size_t j = 0 ;
+//        while (i-- && j < ny){
+//            findPath_task(i,j, I, ny, w,
+//                    L, Rli, Rlj, Pi, Pj, OP);
+//            j = j + 1;
+//        }
+//    }
+//
+//    for (size_t sj = 1; sj < ny; ++sj) {
+//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+//        size_t j = sj ;
+//        while (i-- && j < ny){
+//            findPath_task(i,j, I, ny, w,
+//                          L, Rli, Rlj, Pi, Pj, OP);
+//            j = j + 1;
+//        }
+//    }
+}
 
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
-        size_t j = sj ;
-        while (i-- && j < ny){
-            findPath_task(i,j, I, ny, w,
-                          L, Rli, Rlj, Pi, Pj, OP);
+double *MatrixCuda::getC() {
+    double *hC = new double[nx*ny];
+    double *hCn = new double[nx*ny];
+    cudaMemcpy(hC, C, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
+    // copy host copy to a normal index arrangement
+    size_t idx = 0;
+    for (size_t si = nx; si--; ) {
+        size_t i = si;
+        size_t j = 0 ;
+        while (i < nx && j < ny){
+            hCn[i*ny +j] = hC[idx];
+
+            ++ idx;
+            i = i + 1;
             j = j + 1;
         }
     }
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i =  0;
+        size_t j = sj;
+        while (i < nx && j < ny){
+            hCn[i*ny +j] = hC[idx];
+
+            ++ idx;
+            i = i + 1;
+            j = j + 1;
+        }
+    }
+    return hCn;
+}
+
+double *MatrixCuda::getD() {
+    double *hD = new double[nx*ny];
+    double *hDn = new double[nx*ny];
+    cudaMemcpy(hD, D, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
+    // copy host copy to a normal index arrangement
+    size_t idx = 0;
+    for (size_t si = nx; si--; ) {
+        size_t i = si;
+        size_t j = 0 ;
+        while (i < nx && j < ny){
+            hDn[i*ny +j] = hD[idx];
+
+            ++ idx;
+            i = i + 1;
+            j = j + 1;
+        }
+    }
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i =  0;
+        size_t j = sj;
+        while (i < nx && j < ny){
+            hDn[i*ny +j] = hD[idx];
+
+            ++ idx;
+            i = i + 1;
+            j = j + 1;
+        }
+    }
+    return hDn;
+}
+
+size_t *MatrixCuda::getL() {
+    size_t *hL = new size_t[nx*ny];
+    size_t *hLn = new size_t[nx*ny];
+    cudaMemcpy(hL, L, nx*ny*sizeof(size_t), cudaMemcpyDeviceToHost);
+    // copy host copy to a normal index arrangement
+    size_t idx = 0;
+    for (size_t si = nx; si--; ) {
+        size_t i = si;
+        size_t j = 0 ;
+        while (i < nx && j < ny){
+            hLn[i*ny +j] = hL[idx];
+
+            ++ idx;
+            i = i + 1;
+            j = j + 1;
+        }
+    }
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i =  0;
+        size_t j = sj;
+        while (i < nx && j < ny){
+            hLn[i*ny +j] = hL[idx];
+
+            ++ idx;
+            i = i + 1;
+            j = j + 1;
+        }
+    }
+    return hLn;
+}
+
+bool *MatrixCuda::getOP() {
+    bool *hOP = new bool[nx*ny];
+    cudaMemcpy(hOP, OP, nx*ny*sizeof(bool), cudaMemcpyDeviceToHost);
+    return hOP;     // no need to rearrange since OP is arranged normally
 }

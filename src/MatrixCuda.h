@@ -26,7 +26,7 @@ private:
     void deallocate();
 
 //    inline size_t getIndex(size_t i, size_t j);
-    double getCost(size_t i, size_t j); // calculate the cost of position i, j
+//    double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
 public:
     MatrixCuda(const std::string datafile);
@@ -35,10 +35,10 @@ public:
 // getters
 //    size_t getNx() const { return nx; }
 //    size_t getNy() const { return ny; }
-//    double *getC() const { return C; }
-//    double *getD() const { return D; }
-//    size_t *getL() const { return L; }
-//    bool *getOP() const { return OP; }
+    double *getC();
+    double *getD();
+    size_t *getL();
+    bool  *getOP();
 
     // the 3 method to run
     void init();

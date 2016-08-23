@@ -41,13 +41,11 @@ protected:
     bool allocated;
     virtual void allocate();
 
-    virtual double getCost(size_t i, size_t j); // calculate the cost of position i, j
-
-    void markPath(size_t si, size_t sj, size_t li, size_t lj);
-
 private:
-
+    // helper functions
     inline size_t getIndex(size_t i, size_t j);
+    double getCost(size_t i, size_t j); // calculate the cost of position i, j
+    void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
 public:
     Matrix(const std::string datafile);
@@ -56,10 +54,10 @@ public:
     // getters
     size_t getNx() const { return nx; }
     size_t getNy() const { return ny; }
-    double *getC() const { return C; }
-    double *getD() const { return D; }
-    size_t *getL() const { return L; }
-    bool *getOP() const { return OP; }
+    virtual double *getC() const { return C; }
+    virtual double *getD() const { return D; }
+    virtual size_t *getL() const { return L; }
+    virtual bool *getOP() const { return OP; }
 
     // the 3 method to run
     virtual void init();
