@@ -161,7 +161,9 @@ double getCost(size_t i, size_t j, double* dX, double* dY){
 }
 
 __global__
-void initCuda(size_t *I, double* C, double* D, double* dX, double* dY, const size_t nx, const size_t ny) {
+void initCuda(size_t *I, double* C, double* D,
+              double* dX, double* dY,
+              const size_t nx, const size_t ny) {
     const size_t global_index = (blockDim.x * blockIdx.x) + threadIdx.x;
     if (global_index < nx*ny){
         const size_t i = global_index / ny;
@@ -435,8 +437,10 @@ void MatrixCuda::dtwm(double t, size_t o) {
 }
 
 __device__
-void findPath_task(size_t i, size_t j, size_t* I, size_t ny, size_t w,
-                   size_t* L, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj, bool* OP){
+void findPath_task(size_t i, size_t j,
+                   size_t* I, size_t* L,
+                   size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj, bool* OP,
+                   size_t w, size_t ny){
     size_t idx = I[i*ny +j];
 
     size_t li = Rli[idx]; // Path end i, only stored in start cell
@@ -457,10 +461,26 @@ void findPath_task(size_t i, size_t j, size_t* I, size_t ny, size_t w,
     }
 }
 
-void MatrixCuda::findPath(size_t w) {
+__global__
+void findPathCuda(size_t* I, size_t* L,
+                  size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj, bool* OP,
+                  size_t w, size_t nx, size_t ny){
+    const size_t global_index = (blockDim.x * blockIdx.x) + threadIdx.x;
+    if (global_index < nx*ny){
+        const size_t i = global_index / ny;
+        const size_t j = global_index % ny;
+        findPath_task(i, j, I, L, Rli, Rlj, Pi, Pj, OP, w, ny);
+    }
+}
 
+
+void MatrixCuda::findPath(size_t w) {
     std::cout <<"Cuda findPath"<< std::endl;
-//    for (size_t si = 0; si < nx; ++si) {
+
+    const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
+    findPathCuda<<<num_blocks, BLOCK_SIZE>>>(I, L, Rli, Rlj, Pi, Pj, OP, w, nx, ny);
+
+/*//    for (size_t si = 0; si < nx; ++si) {
 //        size_t i = si + 1; // because while loop has i--
 //        size_t j = 0 ;
 //        while (i-- && j < ny){
@@ -478,7 +498,7 @@ void MatrixCuda::findPath(size_t w) {
 //                          L, Rli, Rlj, Pi, Pj, OP);
 //            j = j + 1;
 //        }
-//    }
+//    }*/
 }
 
 double *MatrixCuda::getC() {
