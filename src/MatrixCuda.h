@@ -16,7 +16,7 @@ private:
 
     /* anti-diagonal indexes, 2D array corresponds to index in 1D array
      * to store indexes for use of matrix stored in diagonal consecutive way */
-    size_t ** I;  // index matrixs
+    size_t* I;  // index matrix. use 1 D array and access 2D index like i*ny + j
 
     // device copy of data
     double* dX;

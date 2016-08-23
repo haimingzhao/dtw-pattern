@@ -6,25 +6,27 @@
 
 #include <iostream>
 #include <limits>
-#include <math_constants.h>
 #include <cuda_runtime.h>
+
+#define BLOCK_SIZE 256
 
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) );
 
 #define getI_bl(i,j, nx, ny) ((nx-(i-j)-1) < ny) ? ( (nx-(i-j)-1)*(nx-(i-j))/2 + j ):( (ny-1)*(ny)/2 + (nx-(i-j)- ny)*ny + j ) ;
 #define getI_ur(i,j, nx, ny, uj0) (ny<=nx) ? (uj0+(ny+ny-j+i+1)*(j-i)/2+i) : ( (j-i<=ny-nx)?(uj0+nx*(j-i)+i):(uj0+nx*(ny-nx)+(nx+ny-j+i+1)*(j-i-ny+nx)/2+i) );
 
-double cuda_inf = std::numeric_limits<double>::infinity();
+// infinity value for CUDA implementation
+double cuda_inf = (std::numeric_limits<double>::max());
 
 MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
 
-    // Allocate and initialise 2D diagonal index matrix
-    I = new size_t*[nx];
-    for (size_t i = 0; i < nx; ++i) {
-        I[i] = new size_t[ny]();
-    }
+//    // Allocate and initialise 2D diagonal index matrix - move to cuda
+//    I = new size_t*[nx];
+//    for (size_t i = 0; i < nx; ++i) {
+//        I[i] = new size_t[ny]();
+//    }
 
-    /* Initialise anti-diagonal memory location coordinates,
+    /* Initialise anti-diagonal memory location coordinates using while loop
      * i is row -> X of length nx,
      * j is column -> Y of length ny
      * careful for size_t being unsigned */
@@ -50,25 +52,6 @@ MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
 //        }
 //    }
 
-    for (size_t i = 0; i < nx; ++i) {
-        for (size_t j = 0; j < ny; ++j) {
-            if ( i >= j ){
-                I[i][j] = getI_bl(i,j, nx, ny);
-            }else{
-                size_t uj0= getI_bl(0,0, nx, ny) ;
-                I[i][j] = getI_ur(i,j, nx, ny, uj0);
-            }
-        }
-    }
-
-    std::cout<< "indexes: " << std::endl;
-    for (size_t i = 0; i < nx; ++i) {
-        for (size_t j = 0; j < ny; ++j) {
-            std::cout<< I[i][j] << " " ;
-        }
-        std::cout << std::endl;
-    }
-
 }
 
 void MatrixCuda::allocate() {
@@ -81,25 +64,10 @@ void MatrixCuda::allocate() {
     cudaEventRecord ( start ) ;
     float milliseconds = 0.0 ;
 #endif
-    // todo  copy X Y to device
-#ifdef TIME
-    cudaEventRecord ( stop ) ;
-    cudaEventSynchronize ( stop ) ;
-    cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << "Matrix, on copySeries, "<< milliseconds << std::endl;
-#endif
-
-
-#ifdef TIME
-//    cudaEvent_t start , stop ;
-    cudaEventCreate (& start) ;
-    cudaEventCreate (& stop) ;
-    cudaEventRecord ( start ) ;
-    milliseconds = 0.0 ;
-#endif
-
     // allocate matrix
     cudaMalloc(&I, (nx*ny)*sizeof(size_t));
+    cudaMalloc(&dX, nx*sizeof(double));
+    cudaMalloc(&dY, ny*sizeof(double));
 
     cudaMalloc(&C, (nx*ny)*sizeof(double));
     cudaMalloc(&D, (nx*ny)*sizeof(double));
@@ -114,7 +82,6 @@ void MatrixCuda::allocate() {
 
     cudaMalloc(&visited, (nx*ny)*sizeof(bool));
     cudaMalloc(&OP, (nx*ny)*sizeof(bool));
-
 #ifdef TIME
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
@@ -122,7 +89,23 @@ void MatrixCuda::allocate() {
     std::cout << "Matrix, on cudaMalloc, "<< milliseconds << std::endl;
 #endif
 
-    /* TODO Allocate and initialise anti-diagonal coordinate arrays */
+
+#ifdef TIME
+//    cudaEvent_t start , stop ;
+    cudaEventCreate (& start) ;
+    cudaEventCreate (& stop) ;
+    cudaEventRecord ( start ) ;
+    milliseconds = 0.0 ;
+#endif
+    // copy X Y to device
+    cudaMemcpy(dX, X.data(), nx*sizeof(double),cudaMemcpyHostToDevice);
+    cudaMemcpy(dY, Y.data(), ny*sizeof(double),cudaMemcpyHostToDevice);
+#ifdef TIME
+    cudaEventRecord ( stop ) ;
+    cudaEventSynchronize ( stop ) ;
+    cudaEventElapsedTime(&milliseconds, start, stop ) ;
+    std::cout << "Matrix, on cudaMemcpy time series, "<< milliseconds << std::endl;
+#endif
 
     allocated = true;
 }
@@ -161,51 +144,104 @@ MatrixCuda::~MatrixCuda() {
     deallocate();
 }
 
-double MatrixCuda::getCost(size_t i, size_t j) {
-    return Matrix::getCost(i, j);
+//double MatrixCuda::getCost(size_t i, size_t j) {
+//    return Matrix::getCost(i, j);
+//}
+
+// cost function, can be changed
+__device__
+double getCost(size_t i, size_t j, double* dX, double* dY){
+    return dX[i] > dY[j] ? dX[i] - dY[j] : dY[j] - dX[i];
+}
+
+__global__
+void initCuda(double* C, size_t *I, double* dX, double* dY, const size_t nx, const size_t ny) {
+    const size_t global_index = (blockDim.x * blockIdx.x) + threadIdx.x;
+    if (global_index < nx*ny){
+        const size_t i = global_index / nx;
+        const size_t j = global_index % nx;
+
+        // calculate anti diagnonal index using derived function in macro
+        if ( i >= j ){
+            I[i*ny+ j] = getI_bl(i,j, nx, ny);
+        }else{
+            size_t uj0= getI_bl(0,0, nx, ny) ;
+            I[i*ny+ j] = getI_ur(i,j, nx, ny, uj0);
+        }
+
+        // calculate cost matrix using the anti diagonal index just got
+        size_t idx = I[i*ny+ j];
+        C[idx] = getCost(i, j, dX, dY);
+    }
 }
 
 void MatrixCuda::init() {
     std::cout <<"Cuda init"<< std::endl;
 
-//    cudaFree(C);
-//
-//    cudaMemset(D);
-//    cudaMemset(L);
-//    cudaMemset(Rsi);
-//    cudaMemset(Rsj);
-//    cudaMemset(Rli);
-//    cudaMemset(Rlj);
-//
-//    cudaMemset(Pi);
-//    cudaMemset(Pj);
-//
-//    cudaFree(visited);
-//    cudaFree(OP);
+    cudaMemset(D, cuda_inf, (nx*ny)*sizeof(double));   // init D to inf for min comparison
+    cudaMemset(L, 0, (nx*ny)*sizeof(size_t));          // init L to 0 for empty lengths
 
-    // todo anti diagonal cuda
-    size_t idx;
-    for (size_t si = 0; si < nx; ++si) {
-        size_t i = si + 1; // because while loop has i--
-        size_t j = 0 ;
-        while (i-- && j < ny){
-            idx = I[i][j];
-            C[idx] = getCost(i, j);
-            D[idx] = cuda_inf;
-            j = j + 1;
-        }
-    }
+    //todo: are these needed?
+    cudaMemset(Rsi, 0, (nx*ny)*sizeof(size_t));
+    cudaMemset(Rsj, 0, (nx*ny)*sizeof(size_t));
+    cudaMemset(Rli, 0, (nx*ny)*sizeof(size_t));
+    cudaMemset(Rlj, 0, (nx*ny)*sizeof(size_t));
+    cudaMemset(Pi, 0, (nx*ny)*sizeof(size_t));
+    cudaMemset(Pj, 0, (nx*ny)*sizeof(size_t));
 
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
-        size_t j = sj ;
-        while (i-- && j < ny){
-            idx = I[i][j];
-            C[idx] = getCost(i, j);
-            D[idx] = cuda_inf;
-            j = j + 1;
-        }
-    }
+    cudaMemset(visited, 0, (nx*ny)*sizeof(bool)); // init visited to 0 (false)
+    cudaMemset(OP,      0, (nx*ny)*sizeof(bool)); // init OptimalPath marks to 0 (false)
+
+    /* TODO initialise anti-diagonal coordinate arrays */
+    // todo put anti diagnoal index in I
+    const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
+
+    initCuda<<<num_blocks, BLOCK_SIZE>>>(C, I, dX, dY, nx, ny);
+//    size_t idx;
+//    for (size_t i = 0; i < nx; ++i) {
+//        for (size_t j = 0; j < ny; ++j) {
+//            if ( i >= j ){
+//                I[i*ny+ j] = getI_bl(i,j, nx, ny);
+//            }else{
+//                size_t uj0= getI_bl(0,0, nx, ny) ;
+//                I[i*ny+ j] = getI_ur(i,j, nx, ny, uj0);
+//            }
+//            idx = I[i*ny+ j];
+//            C[idx] = getCost(i, j);
+//        }
+//    }
+
+//    std::cout<< "indexes: " << std::endl;
+//    for (size_t i = 0; i < nx; ++i) {
+//        for (size_t j = 0; j < ny; ++j) {
+//            std::cout<< I[i][j] << " " ;
+//        }
+//        std::cout << std::endl;
+//    }
+//
+//    // C and D matrix initialisation anti-diagonal --not need to
+//    size_t idx;
+//    for (size_t si = 0; si < nx; ++si) {
+//        size_t i = si + 1; // because while loop has i--
+//        size_t j = 0 ;
+//        while (i-- && j < ny){
+//            idx = I[i][j];
+//            C[idx] = getCost(i, j);
+//            D[idx] = cuda_inf;
+//            j = j + 1;
+//        }
+//    }
+//
+//    for (size_t sj = 1; sj < ny; ++sj) {
+//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+//        size_t j = sj ;
+//        while (i-- && j < ny){
+//            idx = I[i][j];
+//            C[idx] = getCost(i, j);
+//            D[idx] = cuda_inf;
+//            j = j + 1;
+//        }
+//    }
 }
 
 /* We still need to pass i, j because we need to calculate distance form start cell */

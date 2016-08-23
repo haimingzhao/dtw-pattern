@@ -5,10 +5,9 @@
 #ifndef DTWM_MATRIX_H
 #define DTWM_MATRIX_H
 
-#include <stddef.h>
+//#include <stddef.h>
 #include <string>
 #include <vector>
-#include <limits>
 
 // macro to get the 1D index from 2D index
 //#define getIndex(i, j, ny) (i*ny + j)
@@ -47,7 +46,6 @@ protected:
     void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
 private:
-    double inf = std::numeric_limits<double>::infinity();
 
     inline size_t getIndex(size_t i, size_t j);
 

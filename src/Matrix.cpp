@@ -5,14 +5,15 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <string.h>
+//#include <string.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <limits>
 
 #include "Matrix.h"
 
-// todo where should I put this
+#define inf (std::numeric_limits<double>::infinity())
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
 
 inline size_t Matrix::getIndex(size_t i, size_t j) {
