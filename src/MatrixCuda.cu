@@ -5,18 +5,23 @@
 #include "MatrixCuda.h"
 
 #include <iostream>
-#include <limits>
+//#include <limits>
+//#include <cfloat>
+#include <math_constants.h>
 #include <cuda_runtime.h>
 
 #define BLOCK_SIZE 256
 
+#define min2(x,y) (x<y? x : y)
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) );
 
 #define getI_bl(i,j, nx, ny) ((nx-(i-j)-1) < ny) ? ( (nx-(i-j)-1)*(nx-(i-j))/2 + j ):( (ny-1)*(ny)/2 + (nx-(i-j)- ny)*ny + j ) ;
 #define getI_ur(i,j, nx, ny, uj0) (ny<=nx) ? (uj0+(ny+ny-j+i+1)*(j-i)/2+i) : ( (j-i<=ny-nx)?(uj0+nx*(j-i)+i):(uj0+nx*(ny-nx)+(nx+ny-j+i+1)*(j-i-ny+nx)/2+i) );
 
-// infinity value for CUDA implementation
-double cuda_inf = (std::numeric_limits<double>::max());
+// infinity value for host to copy to cuda
+//#define inf DBL_MAX
+//double inf = (std::numeric_limits<double>::max());
+//#define cuda_inf CUDART_INF
 
 MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
 
@@ -66,6 +71,7 @@ void MatrixCuda::allocate() {
 #endif
     // allocate matrix
     cudaMalloc(&I, (nx*ny)*sizeof(size_t));
+
     cudaMalloc(&dX, nx*sizeof(double));
     cudaMalloc(&dY, ny*sizeof(double));
 
@@ -155,7 +161,7 @@ double getCost(size_t i, size_t j, double* dX, double* dY){
 }
 
 __global__
-void initCuda(size_t *I, double* C, double* dX, double* dY, const size_t nx, const size_t ny) {
+void initCuda(size_t *I, double* C, double* D, double* dX, double* dY, const size_t nx, const size_t ny) {
     const size_t global_index = (blockDim.x * blockIdx.x) + threadIdx.x;
     if (global_index < nx*ny){
         const size_t i = global_index / ny;
@@ -172,13 +178,15 @@ void initCuda(size_t *I, double* C, double* dX, double* dY, const size_t nx, con
         // calculate cost matrix using the anti diagonal index just got
         size_t idx = I[i*ny+ j];
         C[idx] = getCost(i, j, dX, dY);
+        D[idx] = CUDART_INF;
     }
 }
 
 void MatrixCuda::init() {
     std::cout <<"Cuda init"<< std::endl;
 
-    cudaMemset(D, cuda_inf, (nx*ny)*sizeof(double));   // init D to inf for min comparison
+    cudaMemset(I, 0, (nx*ny)*sizeof(size_t));          // init I to 0 for debug
+    // init D in initCUDA since cudaMemset only handle bytes
     cudaMemset(L, 0, (nx*ny)*sizeof(size_t));          // init L to 0 for empty lengths
 
     //todo: are these needed?
@@ -196,7 +204,7 @@ void MatrixCuda::init() {
     // CUDA calculate anti-diagonal index in I and calculate cost in parallel for all cells
     const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
 
-    initCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, dX, dY, nx, ny);
+    initCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, D, dX, dY, nx, ny);
 /*//    size_t idx;
 //    for (size_t i = 0; i < nx; ++i) {
 //        for (size_t j = 0; j < ny; ++j) {
@@ -250,12 +258,12 @@ void MatrixCuda::init() {
  * because we need to calculate distance form start cell in dtwm_task */
 __device__
 void dtwm_task(size_t i, size_t j,
-               size_t** I, double* C, double* D, size_t* L,
+               size_t* I, double* C, double* D, size_t* L,
                size_t* Rsi, size_t* Rsj, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj,
-               double t, size_t o){
+               double t, size_t o, const size_t ny){
     double minpre, dtwm;
 
-    size_t idx   = I[i  ][j  ];
+    size_t idx   = I[i*ny +j];
     size_t min_idx = idx;
     size_t mini = i; size_t minj = j;
 
@@ -263,9 +271,9 @@ void dtwm_task(size_t i, size_t j,
         minpre = 0.0;
 //      mini = i; minj = j;
     } else{
-        size_t idx_d = I[i-1][j-1];
-        size_t idx_t = I[i-1][j  ];
-        size_t idx_l = I[i  ][j-1];
+        size_t idx_d = I[(i-1)*ny +(j-1)];
+        size_t idx_t = I[(i-1)*ny +(j  )];
+        size_t idx_l = I[(i  )*ny +(j-1)];
 
         minpre = min3( D[idx_d], D[idx_t], D[idx_l] );
 
@@ -283,7 +291,9 @@ void dtwm_task(size_t i, size_t j,
             minj = j-1;
             min_idx = idx_l;
         }
-        if (minpre == cuda_inf){ minpre = 0.0; }
+
+        // todo: cannot call clib inf from here, use cuda math_constrains.h
+        if (minpre==CUDART_INF){ minpre = 0.0; }
     }
 
     // calculated average cost for the path adding the current cell
@@ -325,7 +335,7 @@ void dtwm_task(size_t i, size_t j,
             Pj [idx] = minj; // mark path
 
             // update last position further away
-            size_t s_idx = I[si][sj];
+            size_t s_idx = I[si*ny +sj];
             size_t li = Rli[ s_idx ]; // Path end i, only stored in start cell
             size_t lj = Rlj[ s_idx ]; // Path end j, only stored in start
             if ( i > li && j > lj ){
@@ -337,26 +347,43 @@ void dtwm_task(size_t i, size_t j,
 }
 
 __global__
-void dtwmCuda(size_t** I, double* C, double* D, size_t* L,
+void dtwmCuda(size_t* I, double* C, double* D, size_t* L,
               size_t* Rsi, size_t* Rsj, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj,
               double t, size_t o, const size_t nx, const size_t ny){
     const size_t tid = (blockDim.x * blockIdx.x) + threadIdx.x;
     if (tid < ny){
         __syncthreads(); //todo: it maynot be needed
+        size_t i,j;
         for (size_t si = 0; si < nx; ++si) {
-
-//            dtwm_task(i, j, I, t, o,
-//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+            // only the thread within the anti-diagonal region is called
+            if ( tid <= min2(si, ny-1)){    // careful with case nx > ny
+                i = si - tid; // start i position (si) walking up tid times
+                j = tid;
+                dtwm_task(i, j,
+                          I, C, D, L,
+                          Rsi, Rsj, Rli, Rlj, Pi, Pj,
+                          t, o, ny);
+            }
             __syncthreads();
         }
+
         for (size_t sj = 1; sj < ny; ++sj) {
-//            dtwm_task(i, j, I, t, o,
-//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
+            // only the thread within the anti-diagonal region is called
+            if ( tid >= sj ){                  // careful with case ny > nx
+                i = nx-1 - min2(tid-sj, nx-1); // last i - step from cell position (tid) to sj
+                j = tid;
+                dtwm_task(i, j,
+                          I, C, D, L,
+                          Rsi, Rsj, Rli, Rlj, Pi, Pj,
+                          t, o, ny);
+//                size_t idx   = I[i*ny +j];
+//                D[idx] = sj;
+            }
             __syncthreads();
         }
     } // run total for nx+ny-1 times in parallel
 
-//    for (size_t si = 0; si < nx; ++si) {
+/*//    for (size_t si = 0; si < nx; ++si) {
 //        size_t i = si + 1; // because while loop has i--
 //        size_t j = 0 ;
 //        while (i-- && j < ny){
@@ -375,6 +402,7 @@ void dtwmCuda(size_t** I, double* C, double* D, size_t* L,
 //            j = j + 1;
 //        }
 //    }
+*/
 }
 
 void MatrixCuda::dtwm(double t, size_t o) {
@@ -383,7 +411,7 @@ void MatrixCuda::dtwm(double t, size_t o) {
     // run CUDA in parallel in an anti-diagonal strip way
     const size_t num_blocks = (ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
 
-    dtwmCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj, t, o);
+    dtwmCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj, t, o, nx, ny);
 
 /*//    for (size_t si = 0; si < nx; ++si) {
 //        size_t i = si + 1; // because while loop has i--
@@ -407,13 +435,13 @@ void MatrixCuda::dtwm(double t, size_t o) {
 }
 
 __device__
-void findPath_task(size_t i, size_t j, size_t** I, size_t ny, size_t w,
+void findPath_task(size_t i, size_t j, size_t* I, size_t ny, size_t w,
                    size_t* L, size_t* Rli, size_t* Rlj, size_t* Pi, size_t* Pj, bool* OP){
-    size_t idx = I[i][j];
+    size_t idx = I[i*ny +j];
 
     size_t li = Rli[idx]; // Path end i, only stored in start cell
     size_t lj = Rlj[idx]; // Path end j, only stored in start
-    size_t idx_l = I[li][lj];
+    size_t idx_l = I[li*ny +lj];
 
     // only look at start cells and end length longer than w, and mark the path
     if (L[idx] == 1 && L[idx_l] > w){
@@ -423,7 +451,7 @@ void findPath_task(size_t i, size_t j, size_t** I, size_t ny, size_t w,
             size_t mi = Pi[idx_l];
             size_t mj = Pj[idx_l];
             li=mi;  lj=mj;          // has to do it this way, otherwise weird errors
-            idx_l = I[mi][mj];      // not forget to update idx_l as well
+            idx_l = I[mi*ny +mj];      // not forget to update idx_l as well
         }
         OP[li*ny + lj] = true;
     }
@@ -550,4 +578,10 @@ bool *MatrixCuda::getOP() {
     bool *hOP = new bool[nx*ny];
     cudaMemcpy(hOP, OP, nx*ny*sizeof(bool), cudaMemcpyDeviceToHost);
     return hOP;     // no need to rearrange since OP is arranged normally
+}
+
+size_t *MatrixCuda::getI() {
+    size_t *hI = new size_t[nx*ny];
+    cudaMemcpy(hI, I, nx*ny*sizeof(size_t), cudaMemcpyDeviceToHost);
+    return hI;     // no need to rearrange since OP is arranged normally
 }

@@ -39,6 +39,7 @@ public:
     double *getD();
     size_t *getL();
     bool  *getOP();
+    size_t *getI();
 
     // the 3 method to run
     void init();

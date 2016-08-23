@@ -3,7 +3,7 @@
 #include "MatrixCuda.h"
 #include "Util.h"
 
-#include <float.h>
+#include <cfloat>
 #include <limits>
 
 using namespace std;
@@ -23,9 +23,9 @@ int main() {
 
     MatrixCuda* m = new MatrixCuda("data/small-d.csv");
     m->runAll(1, 2, 2);
-
     cout << m->getNx() <<  " " << m->getNy() << endl;
 
+    Util::writeMatrixSizet(m->getI(), m->getNx(), m->getNy(), "out/CUDA_I.csv");
     Util::writeMatrix(m->getC(), m->getNx(), m->getNy(), "out/CUDA_C.csv");
     Util::writeMatrix(m->getD(), m->getNx(), m->getNy(), "out/CUDA_D.csv");
     Util::writeMatrixSizet(m->getL(), m->getNx(), m->getNy(), "out/CUDA_L.csv");
@@ -42,8 +42,8 @@ int main() {
 //    Util::writeMatrixBool(m->getOP(), m->getNx(), m->getNy(), "out/OP.csv");
 //    cout <<"Written to file"<< endl;
 
-//    cout << " " << endl;
-
+//    cout << std::numeric_limits<double>::infinity() << endl;
+//    std::cout << DBL_MAX << std::endl;
     delete m;
     return 0;
 }
