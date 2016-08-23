@@ -328,7 +328,7 @@ void dtwm_task(size_t i, size_t j,
         size_t offset = (i-si)>(j-sj) ? (i-si)-(j-sj) : (j-sj)-(i-si);
         if ( offset < o){
             D  [idx] = minpre + C[idx];  // update current cell dtw distance
-            L  [idx] = L[min_idx] + 1;// update current cell dtw length
+            L  [idx] = ( i==0 || j==0 ) ? 1 : L[min_idx] + 1;// update current cell dtw length
 
             Rsi[idx] = si; // this path start at same as previous cell
             Rsj[idx] = sj; // this path start at same as previous cell
