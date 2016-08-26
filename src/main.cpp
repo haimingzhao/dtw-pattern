@@ -1,7 +1,10 @@
 #include <iostream>
+#include <ctime>
+
 #include "Matrix.h"
 #include "MatrixCuda.h"
 #include "Util.h"
+
 
 #include <cfloat>
 #include <limits>
@@ -19,7 +22,10 @@ using namespace std;
 int main() {
 
     MatrixCuda* m = new MatrixCuda("data/internet.csv");
+    clock_t t = clock();
     m->runAll(1.2e10, 15, 20);
+    t = clock()-t;
+    cout << "CUDA run: " << ((float)t)/CLOCKS_PER_SEC << endl;
 
 //    MatrixCuda* m = new MatrixCuda("data/small-d.csv");
 //    m->runAll(1, 2, 2);
@@ -34,7 +40,10 @@ int main() {
 
 
     Matrix* mh = new Matrix("data/internet.csv");
+    t = clock();
     mh->runAll(1.2e10, 15, 20);
+    t = clock()-t;
+    cout << "Serial run: " << ((float)t)/CLOCKS_PER_SEC << endl;
 //    Matrix* mh = new Matrix("data/small-d.csv");
 //    mh->runAll(1, 2, 2);
     cout << mh->getNx() <<  " " << mh->getNy() << endl;

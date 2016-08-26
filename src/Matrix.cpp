@@ -213,14 +213,20 @@ void Matrix::findPath(size_t w) {
 void Matrix::runAll(double t, size_t o, size_t w) {
     allocate();
     if (allocated){
+        clock_t t = clock();
         init();     // initialise all matrices
-        std::cout <<"Initialised"<< std::endl;
+        t = clock()-t;
+        std::cout << "Initialised, took: "<< t/double(CLOCKS_PER_SEC)*1000  << std::endl;
 
+        t = clock();
         dtwm(t, o); // run DTW modified method with cost threshold: t and path offset: o
-        std::cout <<"Solved Matrix"<< std::endl;
+        t = clock()-t;
+        std::cout <<"Solved Matrix, took: "<< t/double(CLOCKS_PER_SEC)*1000 << std::endl;
 
+        t = clock();
         findPath(w);// run find path an mark path with more than window threshold in P
-        std::cout <<"Traced back"<< std::endl;
+        t = clock()-t;
+        std::cout <<"Traced, took: "<< t/double(CLOCKS_PER_SEC)*1000 << std::endl;
     }else{
         std::cerr << "Could not allocate matrices." << std::endl;
     }
