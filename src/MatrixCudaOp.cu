@@ -2,14 +2,19 @@
 // Created by u1590812 on 20/08/16.
 //
 
-#include "MatrixCuda.h"
+#include "MatrixCudaOp.h"
 #include "MatrixKernels.h"
 #include <iostream>
 #include <cuda_runtime.h>
 
 #define BLOCK_SIZE 256
 
-MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
+// infinity value for host to copy to cuda
+//#define inf DBL_MAX
+//double inf = (std::numeric_limits<double>::max());
+//#define cuda_inf CUDART_INF
+
+MatrixCudaOp::MatrixCudaOp(const std::string datafile): Matrix(datafile){
 
 //    // Allocate and initialise 2D diagonal index matrix - move to cuda
 //    I = new size_t*[nx];
@@ -45,7 +50,7 @@ MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
 
 }
 
-void MatrixCuda::allocate() {
+void MatrixCudaOp::allocate() {
     std::cout << "Cuda allocate" << std::endl;
 
 #ifdef TIME
@@ -102,7 +107,7 @@ void MatrixCuda::allocate() {
     allocated = true;
 }
 
-void MatrixCuda::deallocate() {
+void MatrixCudaOp::deallocate() {
 #ifdef TIME
     cudaEvent_t start , stop ;
     cudaEventCreate (& start) ;
@@ -132,11 +137,11 @@ void MatrixCuda::deallocate() {
 #endif
 }
 
-MatrixCuda::~MatrixCuda() {
+MatrixCudaOp::~MatrixCudaOp() {
     deallocate();
 }
 
-void MatrixCuda::init() {
+void MatrixCudaOp::MatrixCudaOp::init() {
     std::cout <<"Cuda init"<< std::endl;
 
     cudaMemset(I, 0, (nx*ny)*sizeof(size_t));          // init I to 0 for debug
@@ -158,7 +163,7 @@ void MatrixCuda::init() {
     // CUDA calculate anti-diagonal index in I and calculate cost in parallel for all cells
     const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
 
-    initCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, D, dX, dY, nx, ny);
+    initCudaOp<<<num_blocks, BLOCK_SIZE>>>(I, C, D, dX, dY, nx, ny);
 /*//    size_t idx;
 //    for (size_t i = 0; i < nx; ++i) {
 //        for (size_t j = 0; j < ny; ++j) {
@@ -206,7 +211,7 @@ void MatrixCuda::init() {
 //    }*/
 }
 
-void MatrixCuda::dtwm(double t, size_t o) {
+void MatrixCudaOp::dtwm(double t, size_t o) {
     std::cout <<"Cuda dtwm"<< std::endl;
 
     // run CUDA in parallel in an anti-diagonal strip way
@@ -235,7 +240,7 @@ void MatrixCuda::dtwm(double t, size_t o) {
 //    }*/
 }
 
-void MatrixCuda::findPath(size_t w) {
+void MatrixCudaOp::findPath(size_t w) {
     std::cout <<"Cuda findPath"<< std::endl;
 
     const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
@@ -262,7 +267,7 @@ void MatrixCuda::findPath(size_t w) {
 //    }*/
 }
 
-double *MatrixCuda::getC() {
+double *MatrixCudaOp::getC() {
     double *hC = new double[nx*ny];
     double *hCn = new double[nx*ny];
     cudaMemcpy(hC, C, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
@@ -293,7 +298,7 @@ double *MatrixCuda::getC() {
     return hCn;
 }
 
-double *MatrixCuda::getD() {
+double *MatrixCudaOp::getD() {
     double *hD = new double[nx*ny];
     double *hDn = new double[nx*ny];
     cudaMemcpy(hD, D, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
@@ -324,7 +329,7 @@ double *MatrixCuda::getD() {
     return hDn;
 }
 
-size_t *MatrixCuda::getL() {
+size_t *MatrixCudaOp::getL() {
     size_t *hL = new size_t[nx*ny];
     size_t *hLn = new size_t[nx*ny];
     cudaMemcpy(hL, L, nx*ny*sizeof(size_t), cudaMemcpyDeviceToHost);
@@ -355,13 +360,13 @@ size_t *MatrixCuda::getL() {
     return hLn;
 }
 
-bool *MatrixCuda::getOP() {
+bool *MatrixCudaOp::getOP() {
     bool *hOP = new bool[nx*ny];
     cudaMemcpy(hOP, OP, nx*ny*sizeof(bool), cudaMemcpyDeviceToHost);
     return hOP;     // no need to rearrange since OP is arranged normally
 }
 
-size_t *MatrixCuda::getI() {
+size_t *MatrixCudaOp::getI() {
     size_t *hI = new size_t[nx*ny];
     cudaMemcpy(hI, I, nx*ny*sizeof(size_t), cudaMemcpyDeviceToHost);
     return hI;     // no need to rearrange since OP is arranged normally

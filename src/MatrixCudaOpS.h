@@ -2,17 +2,17 @@
 // Created by u1590812 on 20/08/16.
 //
 
-#ifndef DTWM_MATRIXCUDA_H
-#define DTWM_MATRIXCUDA_H
+#ifndef DTWM_MATRIXCUDAOPS_H
+#define DTWM_MATRIXCUDAOPS_H
 
 #include <stddef.h>
 #include <string>
 #include <vector>
-
-#include "Matrix.h"
 #include <cuda_runtime.h>
 
-class MatrixCuda : public Matrix{
+#include "Matrix.h"
+
+class MatrixCudaOpS : public Matrix{
 private:
 
     /* anti-diagonal indexes, 2D array corresponds to index in 1D array
@@ -30,8 +30,8 @@ private:
 //    double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
 public:
-    MatrixCuda(const std::string datafile);
-    virtual ~MatrixCuda();
+    MatrixCudaOpS(const std::string datafile);
+    virtual ~MatrixCudaOpS();
 
 // getters
 //    size_t getNx() const { return nx; }
@@ -52,5 +52,4 @@ public:
     void findPath(size_t w); // w: threshold for o: diagonal offset, w: window for report length
 
 };
-
-#endif //DTWM_MATRIXCUDA_H
+#endif //DTWM_MATRIXCUDAOPS_H
