@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -45,6 +46,37 @@ using namespace std;
 //void Util::dtw(std::vector<double> a, std::vector<double> b) {
 //    dtw(&a[0], &b[0], a.size(), b.size());
 //}
+
+void Util::readSeries(const std::string datafile, int start_row) {
+
+    std::ifstream file(datafile);
+    if (file) {
+        std::string line;
+
+        int rowc = 1; // row start from 1
+
+        while (getline(file, line)) {
+            if (rowc >= start_row) {
+                char delim = ',';
+                std::string tok;
+                std::istringstream input;
+                input.str(line);
+                std::getline(input, tok, delim);
+
+                if(line[0]!=','){
+                    X.push_back(strtod(tok.c_str(), 0 ));
+                }
+                if(std::getline(input, tok, delim)){
+                    Y.push_back(strtod(tok.c_str(), 0 ));
+                }
+            }
+            ++rowc;
+        }
+    } else {
+        std::cerr << "Error: File not exist or cannot open: " << datafile << std::endl;
+    }
+}
+
 
 void Util::printMatrix(double *M, size_t nx, size_t ny, string title) {
     cout << title << ": " << endl;

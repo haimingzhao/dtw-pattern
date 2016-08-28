@@ -9,41 +9,7 @@
 
 #define BLOCK_SIZE 256
 
-MatrixCuda::MatrixCuda(const std::string datafile): Matrix(datafile){
-
-//    // Allocate and initialise 2D diagonal index matrix - move to cuda
-//    I = new size_t*[nx];
-//    for (size_t i = 0; i < nx; ++i) {
-//        I[i] = new size_t[ny]();
-//    }
-
-    /* Initialise anti-diagonal memory location coordinates using while loop
-     * i is row -> X of length nx,
-     * j is column -> Y of length ny
-     * careful for size_t being unsigned */
-//    size_t idx = 0;
-//    for (size_t si = nx; si--; ) {
-//        size_t i = si;
-//        size_t j = 0 ;
-//        while (i < nx && j < ny){
-//            I[i][j] = idx;
-//            ++ idx;
-//            i = i + 1;
-//            j = j + 1;
-//        }
-//    }
-//    for (size_t sj = 1; sj < ny; ++sj) {
-//        size_t i =  0;
-//        size_t j = sj;
-//        while (i < nx && j < ny){
-//            I[i][j] = idx;
-//            ++ idx;
-//            i = i + 1;
-//            j = j + 1;
-//        }
-//    }
-
-}
+MatrixCuda::MatrixCuda(const std::vector<double> &X, const std::vector<double> &Y): Matrix(X,Y){}
 
 void MatrixCuda::allocate() {
     std::cout << "Cuda allocate" << std::endl;
@@ -264,95 +230,20 @@ void MatrixCuda::findPath(size_t w) {
 
 double *MatrixCuda::getC() {
     double *hC = new double[nx*ny];
-    double *hCn = new double[nx*ny];
     cudaMemcpy(hC, C, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
-    // copy host copy to a normal index arrangement
-    size_t idx = 0;
-    for (size_t si = nx; si--; ) {
-        size_t i = si;
-        size_t j = 0 ;
-        while (i < nx && j < ny){
-            hCn[i*ny +j] = hC[idx];
-
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
-        }
-    }
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i =  0;
-        size_t j = sj;
-        while (i < nx && j < ny){
-            hCn[i*ny +j] = hC[idx];
-
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
-        }
-    }
-    return hCn;
+    return hC;
 }
 
 double *MatrixCuda::getD() {
     double *hD = new double[nx*ny];
-    double *hDn = new double[nx*ny];
     cudaMemcpy(hD, D, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
-    // copy host copy to a normal index arrangement
-    size_t idx = 0;
-    for (size_t si = nx; si--; ) {
-        size_t i = si;
-        size_t j = 0 ;
-        while (i < nx && j < ny){
-            hDn[i*ny +j] = hD[idx];
-
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
-        }
-    }
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i =  0;
-        size_t j = sj;
-        while (i < nx && j < ny){
-            hDn[i*ny +j] = hD[idx];
-
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
-        }
-    }
-    return hDn;
+    return hD;
 }
 
 size_t *MatrixCuda::getL() {
     size_t *hL = new size_t[nx*ny];
-    size_t *hLn = new size_t[nx*ny];
     cudaMemcpy(hL, L, nx*ny*sizeof(size_t), cudaMemcpyDeviceToHost);
-    // copy host copy to a normal index arrangement
-    size_t idx = 0;
-    for (size_t si = nx; si--; ) {
-        size_t i = si;
-        size_t j = 0 ;
-        while (i < nx && j < ny){
-            hLn[i*ny +j] = hL[idx];
-
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
-        }
-    }
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i =  0;
-        size_t j = sj;
-        while (i < nx && j < ny){
-            hLn[i*ny +j] = hL[idx];
-
-            ++ idx;
-            i = i + 1;
-            j = j + 1;
-        }
-    }
-    return hLn;
+    return hL;
 }
 
 bool *MatrixCuda::getOP() {

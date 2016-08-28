@@ -9,46 +9,7 @@
 
 #define BLOCK_SIZE 256
 
-// infinity value for host to copy to cuda
-//#define inf DBL_MAX
-//double inf = (std::numeric_limits<double>::max());
-//#define cuda_inf CUDART_INF
-
-MatrixCudaOp::MatrixCudaOp(const std::string datafile): Matrix(datafile){
-
-//    // Allocate and initialise 2D diagonal index matrix - move to cuda
-//    I = new size_t*[nx];
-//    for (size_t i = 0; i < nx; ++i) {
-//        I[i] = new size_t[ny]();
-//    }
-
-    /* Initialise anti-diagonal memory location coordinates using while loop
-     * i is row -> X of length nx,
-     * j is column -> Y of length ny
-     * careful for size_t being unsigned */
-//    size_t idx = 0;
-//    for (size_t si = nx; si--; ) {
-//        size_t i = si;
-//        size_t j = 0 ;
-//        while (i < nx && j < ny){
-//            I[i][j] = idx;
-//            ++ idx;
-//            i = i + 1;
-//            j = j + 1;
-//        }
-//    }
-//    for (size_t sj = 1; sj < ny; ++sj) {
-//        size_t i =  0;
-//        size_t j = sj;
-//        while (i < nx && j < ny){
-//            I[i][j] = idx;
-//            ++ idx;
-//            i = i + 1;
-//            j = j + 1;
-//        }
-//    }
-
-}
+MatrixCudaOp::MatrixCudaOp(const std::vector<double> &X, const std::vector<double> &Y): Matrix(X,Y){}
 
 void MatrixCudaOp::allocate() {
     std::cout << "Cuda allocate" << std::endl;
@@ -273,25 +234,22 @@ double *MatrixCudaOp::getC() {
     cudaMemcpy(hC, C, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
     // copy host copy to a normal index arrangement
     size_t idx = 0;
-    for (size_t si = nx; si--; ) {
-        size_t i = si;
+    for (size_t si = 0; si < nx; ++si) {
+        size_t i = si + 1; // because while loop has i--
         size_t j = 0 ;
-        while (i < nx && j < ny){
+        while (i-- && j < ny){
             hCn[i*ny +j] = hC[idx];
-
             ++ idx;
-            i = i + 1;
             j = j + 1;
         }
     }
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i =  0;
-        size_t j = sj;
-        while (i < nx && j < ny){
-            hCn[i*ny +j] = hC[idx];
 
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+        size_t j = sj ;
+        while (i-- && j < ny){
+            hCn[i*ny +j] = hC[idx];
             ++ idx;
-            i = i + 1;
             j = j + 1;
         }
     }
@@ -304,25 +262,22 @@ double *MatrixCudaOp::getD() {
     cudaMemcpy(hD, D, nx*ny*sizeof(double), cudaMemcpyDeviceToHost);
     // copy host copy to a normal index arrangement
     size_t idx = 0;
-    for (size_t si = nx; si--; ) {
-        size_t i = si;
+    for (size_t si = 0; si < nx; ++si) {
+        size_t i = si + 1; // because while loop has i--
         size_t j = 0 ;
-        while (i < nx && j < ny){
+        while (i-- && j < ny){
             hDn[i*ny +j] = hD[idx];
-
             ++ idx;
-            i = i + 1;
             j = j + 1;
         }
     }
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i =  0;
-        size_t j = sj;
-        while (i < nx && j < ny){
-            hDn[i*ny +j] = hD[idx];
 
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+        size_t j = sj ;
+        while (i-- && j < ny){
+            hDn[i*ny +j] = hD[idx];
             ++ idx;
-            i = i + 1;
             j = j + 1;
         }
     }
@@ -335,25 +290,22 @@ size_t *MatrixCudaOp::getL() {
     cudaMemcpy(hL, L, nx*ny*sizeof(size_t), cudaMemcpyDeviceToHost);
     // copy host copy to a normal index arrangement
     size_t idx = 0;
-    for (size_t si = nx; si--; ) {
-        size_t i = si;
+    for (size_t si = 0; si < nx; ++si) {
+        size_t i = si + 1; // because while loop has i--
         size_t j = 0 ;
-        while (i < nx && j < ny){
+        while (i-- && j < ny){
             hLn[i*ny +j] = hL[idx];
-
             ++ idx;
-            i = i + 1;
             j = j + 1;
         }
     }
-    for (size_t sj = 1; sj < ny; ++sj) {
-        size_t i =  0;
-        size_t j = sj;
-        while (i < nx && j < ny){
-            hLn[i*ny +j] = hL[idx];
 
+    for (size_t sj = 1; sj < ny; ++sj) {
+        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
+        size_t j = sj ;
+        while (i-- && j < ny){
+            hLn[i*ny +j] = hL[idx];
             ++ idx;
-            i = i + 1;
             j = j + 1;
         }
     }

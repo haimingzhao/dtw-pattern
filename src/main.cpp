@@ -4,7 +4,6 @@
 #include "Matrix.h"
 #include "MatrixCuda.h"
 #include "MatrixCudaOp.h"
-#include "MatrixCudaOpS.h"
 #include "Util.h"
 
 
@@ -23,33 +22,49 @@ using namespace std;
 
 int main() {
 
+    Util *u = new Util();
+    u->readSeries("data/small-d.csv", 2);  // read file for 2 column start with row 2
+
 //    MatrixCuda* m = new MatrixCuda("data/internet.csv");
 //    clock_t t = clock();
 //    m->runAll(1.2e10, 15, 20);
 //    t = clock()-t;
 //    cout << "CUDA run: " << ((float)t)/CLOCKS_PER_SEC << endl;
 
-    MatrixCudaOp* m = new MatrixCudaOp("data/small-d.csv");
-    m->runAll(1, 2, 2);
-    cout << m->getNx() <<  " " << m->getNy() << endl;
+    MatrixCudaOp *mo = new MatrixCudaOp(u->getX(), u->getY());
+    mo->runAll(1, 2, 2);
+    cout << mo->getNx() << " " << mo->getNy() << endl;
 
-    Util::writeMatrixSizet(m->getI(), m->getNx(), m->getNy(), "out/CUDA_I.csv");
-//    Util::writeMatrix(m->getC(), m->getNx(), m->getNy(), "out/CUDA_C.csv");
-//    Util::writeMatrix(m->getD(), m->getNx(), m->getNy(), "out/CUDA_D.csv");
-//    Util::writeMatrixSizet(m->getL(), m->getNx(), m->getNy(), "out/CUDA_L.csv");
-//    Util::writeMatrixBool(m->getOP(), m->getNx(), m->getNy(), "out/CUDA_OP.csv");
+    Util::writeMatrixSizet(mo->getI(), mo->getNx(), mo->getNy(), "out/CUDAmo_I.csv");
+    Util::writeMatrix(mo->getC(), mo->getNx(), mo->getNy(), "out/CUDAmo_C.csv");
+    Util::writeMatrix(mo->getD(), mo->getNx(), mo->getNy(), "out/CUDAmo_D.csv");
+    Util::writeMatrixSizet(mo->getL(), mo->getNx(), mo->getNy(), "out/CUDAmo_L.csv");
+    Util::writeMatrixBool(mo->getOP(), mo->getNx(), mo->getNy(), "out/CUDAmo_OP.csv");
     cout <<"Written to file"<< endl;
-    delete m;
+    delete mo;
 
-    /*
+    MatrixCuda* mc = new MatrixCuda(u->getX(), u->getY());
+    mc->runAll(1, 2, 2);
+    cout << mc->getNx() <<  " " << mc->getNy() << endl;
 
-    Matrix* mh = new Matrix("data/internet.csv");
-    t = clock();
-    mh->runAll(1.2e10, 15, 20);
-    t = clock()-t;
-    cout << "Serial run: " << ((float)t)/CLOCKS_PER_SEC << endl;
-//    Matrix* mh = new Matrix("data/small-d.csv");
-//    mh->runAll(1, 2, 2);
+    Util::writeMatrixSizet(mc->getI(), mc->getNx(), mc->getNy(), "out/CUDAmc_I.csv");
+    Util::writeMatrix(mc->getC(), mc->getNx(), mc->getNy(), "out/CUDAmc_C.csv");
+    Util::writeMatrix(mc->getD(), mc->getNx(), mc->getNy(), "out/CUDAmc_D.csv");
+    Util::writeMatrixSizet(mc->getL(), mc->getNx(), mc->getNy(), "out/CUDAmc_L.csv");
+    Util::writeMatrixBool(mc->getOP(), mc->getNx(), mc->getNy(), "out/CUDAmc_OP.csv");
+    cout <<"Written to file"<< endl;
+    delete mc;
+
+
+
+//    Matrix* mh = new Matrix("data/internet.csv");
+//    t = clock();
+//    mh->runAll(1.2e10, 15, 20);
+//    t = clock()-t;
+//    cout << "Serial run: " << ((float)t)/CLOCKS_PER_SEC << endl;
+
+    Matrix* mh = new Matrix(u->getX(), u->getY());
+    mh->runAll(1, 2, 2);
     cout << mh->getNx() <<  " " << mh->getNy() << endl;
 
     Util::writeMatrix(mh->getC(), mh->getNx(), mh->getNy(), "out/C.csv");
@@ -58,11 +73,8 @@ int main() {
     Util::writeMatrixBool(mh->getOP(), mh->getNx(), mh->getNy(), "out/OP.csv");
     cout <<"Written to file"<< endl;
 
-//    cout << std::numeric_limits<double>::infinity() << endl;
-//    std::cout << DBL_MAX << std::endl;
 
     delete mh;
-     */
 
     return 0;
 }

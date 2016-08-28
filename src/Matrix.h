@@ -14,8 +14,6 @@
 
 class Matrix {
 protected:
-    const std::string datafile;
-
     // the 2 comparing time series
     size_t nx, ny;
     std::vector<double> X;
@@ -36,19 +34,21 @@ protected:
     bool *visited; // helper Matrix for storing marked path
     bool*   OP;  // report optimal paths
 
-    void readSeries(const std::string datafile, int start_row);
 
     bool allocated;
     virtual void allocate();
 
 private:
     // helper functions
+//    void readSeries(const std::string datafile, int start_row);
+
     inline size_t getIndex(size_t i, size_t j);
     double getCost(size_t i, size_t j); // calculate the cost of position i, j
     void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
 public:
-    Matrix(const std::string datafile);
+    Matrix(const std::vector<double> &X, const std::vector<double> &Y);
+
     virtual ~Matrix() { }
 
     // getters

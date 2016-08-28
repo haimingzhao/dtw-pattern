@@ -30,7 +30,7 @@ private:
 //    double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
 public:
-    MatrixCuda(const std::string datafile);
+    MatrixCuda(const std::vector<double> &X, const std::vector<double> &Y);
     virtual ~MatrixCuda();
 
 // getters

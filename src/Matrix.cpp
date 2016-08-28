@@ -20,44 +20,13 @@ inline size_t Matrix::getIndex(size_t i, size_t j) {
     return i*ny + j;
 }
 
-void Matrix::readSeries(const std::string datafile, int start_row) {
-
-    std::ifstream file(datafile);
-    if (file) {
-        std::string line;
-
-        int rowc = 1; // row start from 1
-
-        while (getline(file, line)) {
-            if (rowc >= start_row) {
-                char delim = ',';
-                std::string tok;
-                std::istringstream input;
-                input.str(line);
-                std::getline(input, tok, delim);
-
-                if(line[0]!=','){
-                    X.push_back(strtod(tok.c_str(), 0 ));
-                }
-                if(std::getline(input, tok, delim)){
-                    Y.push_back(strtod(tok.c_str(), 0 ));
-                }
-            }
-            ++rowc;
-        }
-    } else {
-        std::cerr << "Error: File not exist or cannot open: " << datafile << std::endl;
-    }
-}
-
-Matrix::Matrix(const std::string datafile): datafile(datafile){
+Matrix::Matrix(const std::vector<double> &X, const std::vector<double> &Y): X(X), Y(Y) {
     allocated = false;
 
-    readSeries(datafile, 2);
     nx = X.size();
     ny = Y.size();
 
-//    allocate(); // move to runAll
+    // allocate(); move to runAll so can use subclass's function
 }
 
 void Matrix::allocate() {
@@ -216,17 +185,17 @@ void Matrix::runAll(double t, size_t o, size_t w) {
         clock_t t = clock();
         init();     // initialise all matrices
         t = clock()-t;
-        std::cout << "Initialised, took: "<< t/double(CLOCKS_PER_SEC)*1000  << std::endl;
-//
-//        t = clock();
-//        dtwm(t, o); // run DTW modified method with cost threshold: t and path offset: o
-//        t = clock()-t;
-//        std::cout <<"Solved Matrix, took: "<< t/double(CLOCKS_PER_SEC)*1000 << std::endl;
-//
-//        t = clock();
-//        findPath(w);// run find path an mark path with more than window threshold in P
-//        t = clock()-t;
-//        std::cout <<"Traced, took: "<< t/double(CLOCKS_PER_SEC)*1000 << std::endl;
+        std::cout << "Initialised, took: "<< ((float)t)/CLOCKS_PER_SEC  << std::endl;
+
+        t = clock();
+        dtwm(t, o); // run DTW modified method with cost threshold: t and path offset: o
+        t = clock()-t;
+        std::cout <<"Solved Matrix, took: "<< ((float)t)/CLOCKS_PER_SEC << std::endl;
+
+        t = clock();
+        findPath(w);// run find path an mark path with more than window threshold in P
+        t = clock()-t;
+        std::cout <<"Traced, took: "<< ((float)t)/CLOCKS_PER_SEC << std::endl;
     }else{
         std::cerr << "Could not allocate matrices." << std::endl;
     }
