@@ -9,10 +9,10 @@
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) );
 
 #define getI_bl(i,j, nx, ny) ((nx-(i-j)-1) < ny) ? ( (nx-(i-j)-1)*(nx-(i-j))/2 + j ):( (ny-1)*(ny)/2 + (nx-(i-j)- ny)*ny + j ) ;
-#define getI_ur(i,j, nx, ny, uj0) (ny<=nx) ? (uj0+(ny+ny-j+i+1)*(j-i)/2+i) : ( (j-i<=ny-nx)?(uj0+nx*(j-i)+i):(uj0+nx*(ny-nx)+(nx+ny-j+i+1)*(j-i-ny+nx)/2+i) );
+#define getI_ur(i,j, nx, ny, uj0) (ny<nx) ? (uj0+(ny+ny-j+i+1)*(j-i)/2+i) : ( (j-i<=ny-nx)?(uj0+nx*(j-i)+i):(uj0+nx*(ny-nx)+(nx+ny-j+i+1)*(j-i-ny+nx)/2+i) );
 
 #define getI_blOp(i,j, nx, ny) ( (i+j < ny) ? ( (i+j)*(i+j+1)/2 + j ):( (ny-1)*(ny)/2 + (i+j-ny+1)*ny + j ) ) ;
-#define getI_urOp(i,j, nx, ny, uj0) (ny<=nx) ? (uj0+(ny+ny-j+i+1)*(j-i)/2+i) : ( (j-i<=ny-nx)?(uj0+nx*(j-i)+i):(uj0+nx*(ny-nx)+(nx+ny-j+i+1)*(j-i-ny+nx)/2+i) );
+#define getI_urOp(i,j, nx, ny, uj0) (ny<=nx) ? (uj0+(ny+ny-j+nx-i)*(j-nx+1+i)/2+nx-1-i) : ( (j-nx+1+i<=ny-nx)?(uj0+nx*(j-nx+1+i)+(nx-1-i)):(uj0+nx*(ny-nx)+(nx+ny-j+nx-i)*(j-nx+1+i-ny+nx)/2+(nx-1-i)) );
 
 
 // cost function, can be changed
@@ -56,10 +56,10 @@ void initCudaOp(size_t *I, double* C, double* D,
 
         // calculate anti diagnonal index using derived function in macro
         if ( j < nx-i ){
-            I[i*ny+ j] = getI_blOp(i,j, nx, ny);
+//            I[i*ny+ j] = getI_blOp(i,j, nx, ny);
         }else{
-//            size_t uj0= getI_bl(0,0, nx, ny);
-//            I[i*ny+ j] = getI_ur(i,j, nx, ny, uj0);
+//            size_t uj0= getI_blOp(nx-1,0, nx, ny);
+//            I[i*ny+ j] = getI_urOp(i,j, nx, ny, uj0);
         }
 
         // calculate cost matrix using the anti diagonal index just got
