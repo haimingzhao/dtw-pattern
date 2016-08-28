@@ -56,10 +56,10 @@ void initCudaOp(size_t *I, double* C, double* D,
 
         // calculate anti diagnonal index using derived function in macro
         if ( j < nx-i ){
-//            I[i*ny+ j] = getI_blOp(i,j, nx, ny);
+            I[i*ny+ j] = getI_blOp(i,j, nx, ny);
         }else{
-//            size_t uj0= getI_blOp(nx-1,0, nx, ny);
-//            I[i*ny+ j] = getI_urOp(i,j, nx, ny, uj0);
+            size_t uj0= getI_blOp(nx-1,0, nx, ny);
+            I[i*ny+ j] = getI_urOp(i,j, nx, ny, uj0);
         }
 
         // calculate cost matrix using the anti diagonal index just got
