@@ -15,6 +15,7 @@
 class Matrix {
 protected:
     // the 2 comparing time series
+
     size_t nx, ny;
     std::vector<double> X;
     std::vector<double> Y;
@@ -39,6 +40,8 @@ protected:
     virtual void allocate();
 
 private:
+    const std::string classtype ;
+
     // helper functions
 //    void readSeries(const std::string datafile, int start_row);
 
@@ -46,10 +49,12 @@ private:
     double getCost(size_t i, size_t j); // calculate the cost of position i, j
     void markPath(size_t si, size_t sj, size_t li, size_t lj);
 
+
+
 public:
     Matrix(const std::vector<double> &X, const std::vector<double> &Y);
 
-    virtual ~Matrix() { }
+//    virtual ~Matrix();
 
     // getters
     size_t getNx() const { return nx; }

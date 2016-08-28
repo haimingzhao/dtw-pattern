@@ -9,10 +9,11 @@
 
 #define BLOCK_SIZE 256
 
+const std::string classtype = "CUDA_Optimise_Matrix";
+
 MatrixCudaOp::MatrixCudaOp(const std::vector<double> &X, const std::vector<double> &Y): Matrix(X,Y){}
 
 void MatrixCudaOp::allocate() {
-    std::cout << "Cuda allocate" << std::endl;
 
 #ifdef TIME
     cudaEvent_t start , stop ;
@@ -44,7 +45,7 @@ void MatrixCudaOp::allocate() {
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << "Matrix, on cudaMalloc, "<< milliseconds << std::endl;
+    std::cout << this->classtype << ", on cudaMalloc, "<< milliseconds << std::endl;
 #endif
 
 
@@ -62,7 +63,7 @@ void MatrixCudaOp::allocate() {
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << "Matrix, on cudaMemcpy time series, "<< milliseconds << std::endl;
+    std::cout << this->classtype << ", on cudaMemcpy time series, "<< milliseconds << std::endl;
 #endif
 
     allocated = true;
@@ -76,6 +77,10 @@ void MatrixCudaOp::deallocate() {
     cudaEventRecord ( start ) ;
     float milliseconds = 0.0 ;
 #endif
+    cudaFree(I);
+    cudaFree(dX);
+    cudaFree(dY);
+
     cudaFree(C);
     cudaFree(D);
     cudaFree(L);
@@ -102,8 +107,7 @@ MatrixCudaOp::~MatrixCudaOp() {
     deallocate();
 }
 
-void MatrixCudaOp::MatrixCudaOp::init() {
-    std::cout <<"Cuda init"<< std::endl;
+void MatrixCudaOp::init() {
 
     cudaMemset(I, 0, (nx*ny)*sizeof(size_t));          // init I to 0 for debug
     // init D in initCUDA since cudaMemset only handle bytes
@@ -125,107 +129,22 @@ void MatrixCudaOp::MatrixCudaOp::init() {
     const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
 
     initCudaOp<<<num_blocks, BLOCK_SIZE>>>(I, C, D, dX, dY, nx, ny);
-/*//    size_t idx;
-//    for (size_t i = 0; i < nx; ++i) {
-//        for (size_t j = 0; j < ny; ++j) {
-//            if ( i >= j ){
-//                I[i*ny+ j] = getI_bl(i,j, nx, ny);
-//            }else{
-//                size_t uj0= getI_bl(0,0, nx, ny) ;
-//                I[i*ny+ j] = getI_ur(i,j, nx, ny, uj0);
-//            }
-//            idx = I[i*ny+ j];
-//            C[idx] = getCost(i, j);
-//        }
-//    }
-
-//    std::cout<< "indexes: " << std::endl;
-//    for (size_t i = 0; i < nx; ++i) {
-//        for (size_t j = 0; j < ny; ++j) {
-//            std::cout<< I[i][j] << " " ;
-//        }
-//        std::cout << std::endl;
-//    }
-//
-//    // C and D matrix initialisation anti-diagonal --not need to
-//    size_t idx;
-//    for (size_t si = 0; si < nx; ++si) {
-//        size_t i = si + 1; // because while loop has i--
-//        size_t j = 0 ;
-//        while (i-- && j < ny){
-//            idx = I[i][j];
-//            C[idx] = getCost(i, j);
-//            D[idx] = cuda_inf;
-//            j = j + 1;
-//        }
-//    }
-//
-//    for (size_t sj = 1; sj < ny; ++sj) {
-//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
-//        size_t j = sj ;
-//        while (i-- && j < ny){
-//            idx = I[i][j];
-//            C[idx] = getCost(i, j);
-//            D[idx] = cuda_inf;
-//            j = j + 1;
-//        }
-//    }*/
 }
 
 void MatrixCudaOp::dtwm(double t, size_t o) {
-    std::cout <<"Cuda dtwm"<< std::endl;
 
     // run CUDA in parallel in an anti-diagonal strip way
     const size_t num_blocks = (ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
 
     dtwmCuda<<<num_blocks, BLOCK_SIZE>>>(I, C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj, t, o, nx, ny);
 
-/*//    for (size_t si = 0; si < nx; ++si) {
-//        size_t i = si + 1; // because while loop has i--
-//        size_t j = 0 ;
-//        while (i-- && j < ny){
-//            dtwm_task(i, j, I, t, o,
-//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
-//            j = j + 1;
-//        }
-//    }
-//
-//    for (size_t sj = 1; sj < ny; ++sj) {
-//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
-//        size_t j = sj ;
-//        while (i-- && j < ny){
-//            dtwm_task(i, j, I, t, o,
-//                      C, D, L, Rsi, Rsj, Rli, Rlj, Pi, Pj);
-//            j = j + 1;
-//        }
-//    }*/
 }
 
 void MatrixCudaOp::findPath(size_t w) {
-    std::cout <<"Cuda findPath"<< std::endl;
 
     const size_t num_blocks = (nx*ny + BLOCK_SIZE-1)/BLOCK_SIZE; // rounding up dividing by BLOCK_SIZE
     findPathCuda<<<num_blocks, BLOCK_SIZE>>>(I, L, Rli, Rlj, Pi, Pj, OP, w, nx, ny);
 
-/*//    for (size_t si = 0; si < nx; ++si) {
-//        size_t i = si + 1; // because while loop has i--
-//        size_t j = 0 ;
-//        while (i-- && j < ny){
-//            findPath_task(i,j, I, ny, w,
-//                    L, Rli, Rlj, Pi, Pj, OP);
-//            j = j + 1;
-//        }
-//    }
-//
-//    for (size_t sj = 1; sj < ny; ++sj) {
-//        size_t i = nx ;  // which is nx = i end index +1, because we need it for i--
-//        size_t j = sj ;
-//        while (i-- && j < ny){
-//            findPath_task(i,j, I, ny, w,
-//                          L, Rli, Rlj, Pi, Pj, OP);
-//            j = j + 1;
-//        }
-//    }*/
 }
 
 double *MatrixCudaOp::getC() {

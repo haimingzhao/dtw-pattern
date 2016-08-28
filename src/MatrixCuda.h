@@ -14,6 +14,7 @@
 
 class MatrixCuda : public Matrix{
 private:
+    const std::string classtype ;
 
     /* anti-diagonal indexes, 2D array corresponds to index in 1D array
      * to store indexes for use of matrix stored in diagonal consecutive way */
