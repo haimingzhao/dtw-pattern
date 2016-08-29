@@ -9,7 +9,7 @@
 
 #define BLOCK_SIZE 256
 
-const std::string classtype = "CUDA_Matrix" ;
+const std::string MatrixCuda::classtype = "CUDA_Matrix" ;
 
 MatrixCuda::MatrixCuda(const std::vector<double> &X, const std::vector<double> &Y): Matrix(X,Y){}
 

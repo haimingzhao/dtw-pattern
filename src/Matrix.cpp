@@ -17,7 +17,7 @@
 #define inf (std::numeric_limits<double>::infinity())
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
 
-const std::string classtype = "HostMatrix";
+const std::string Matrix::classtype = "HostMatrix";
 
 inline size_t Matrix::getIndex(size_t i, size_t j) {
     return i*ny + j;
@@ -185,7 +185,6 @@ void Matrix::findPath(size_t w) {
 void Matrix::runAll(double t, size_t o, size_t w) {
     allocate();
     if (allocated){
-//        clock_t t_start = clock();
 #ifdef TIME
     cudaEvent_t start , stop ;
     cudaEventCreate (& start) ;
@@ -194,41 +193,43 @@ void Matrix::runAll(double t, size_t o, size_t w) {
     float milliseconds = 0.0 ;
 #endif
         init();     // initialise all matrices
-//        clock_t t_end = clock() ;
 #ifdef TIME
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << classtype << ", on init, "<< milliseconds << std::endl;
+    std::cout << this->classtype << ", on init, "<< milliseconds << std::endl;
 #endif
-//        std::cout << this->classtype <<", Initialisation, " << ((float) t_end - t_start) / (CLOCKS_PER_SEC/1000.0) << std::endl;
 
-//        t_start = clock();
+#ifdef TIME
+//        cudaEvent_t start , stop ;
+    cudaEventCreate (& start) ;
+    cudaEventCreate (& stop) ;
+    cudaEventRecord ( start ) ;
+    milliseconds = 0.0 ;
+#endif
         dtwm(t, o); // run DTW modified method with cost threshold: t and path offset: o
-//        t_end = clock() ;
-//        std::cout << this->classtype << ", Solve Matrix, " << ((float) t_end - t_start) / (CLOCKS_PER_SEC/1000.0) << std::endl;
+#ifdef TIME
+    cudaEventRecord ( stop ) ;
+    cudaEventSynchronize ( stop ) ;
+    cudaEventElapsedTime(&milliseconds, start, stop ) ;
+    std::cout << classtype << ", on dtwm, "<< milliseconds << std::endl;
+#endif
 
-//        t_start = clock();
+#ifdef TIME
+//        cudaEvent_t start , stop ;
+    cudaEventCreate (& start) ;
+    cudaEventCreate (& stop) ;
+    cudaEventRecord ( start ) ;
+    milliseconds = 0.0 ;
+#endif
         findPath(w);// run find path an mark path with more than window threshold in P
-//        t_end = clock() ;
-//        std::cout << this->classtype << ", Trace back, " << ((float) t_end - t_start) / (CLOCKS_PER_SEC/1000.0) << std::endl;
+#ifdef TIME
+    cudaEventRecord ( stop ) ;
+    cudaEventSynchronize ( stop ) ;
+    cudaEventElapsedTime(&milliseconds, start, stop ) ;
+    std::cout << classtype << ", on findPath, "<< milliseconds << std::endl;
+#endif
     }else{
         std::cerr << "Could not allocate matrices." << std::endl;
     }
 }
-
-//Matrix::~Matrix() {
-//    delete[] C ;
-//    delete[] D ;
-//    delete[] L ;
-//    delete[] Rsi ;
-//    delete[] Rsj ;
-//    delete[] Rli ;
-//    delete[] Rlj ;
-//
-//    delete[] Pi ;
-//    delete[] Pj ;
-//
-//    delete[] visited ;
-//    delete[] OP ;
-//}

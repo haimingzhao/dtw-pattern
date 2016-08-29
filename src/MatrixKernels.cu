@@ -4,6 +4,7 @@
 
 #include "MatrixKernels.h"
 #include <math_constants.h>
+#include <stddef.h>
 
 #define min2(x,y) (x<y? x : y)
 #define min3(x,y,z) ( x<y ? ( x<z ? x:z) : (y<z ? y:z) )
@@ -60,6 +61,23 @@ void initCudaOp(size_t *I, double* C, double* D,
         C[idx] = getCost(i, j, dX, dY);
         D[idx] = CUDART_INF;
     }
+}
+
+__device__
+inline size_t getIndexOp(i,j, nx, ny){
+    size_t idx;
+    if ( j < nx-i ){
+        idx = getI_tlOp(i,j, nx, ny);    // top left optimised mem address
+    }else{
+        size_t uj0= getI_tlOp(nx-1,0, nx, ny);
+        idx = getI_brOp(i,j, nx, ny, uj0); // bottom right optimised mem address
+    }
+    return idx;
+}
+
+__device__
+inline size_t getIndex(i,j, nx, ny){
+    return i*ny + j;
 }
 
 /* sub function to call for calculating individual cells

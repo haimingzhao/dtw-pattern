@@ -14,6 +14,8 @@
 
 class Matrix {
 protected:
+    static const std::string classtype ;
+
     // the 2 comparing time series
 
     size_t nx, ny;
@@ -40,7 +42,6 @@ protected:
     virtual void allocate();
 
 private:
-    const std::string classtype ;
 
     // helper functions
 //    void readSeries(const std::string datafile, int start_row);
@@ -54,7 +55,7 @@ private:
 public:
     Matrix(const std::vector<double> &X, const std::vector<double> &Y);
 
-//    virtual ~Matrix();
+    virtual ~Matrix() ;
 
     // getters
     size_t getNx() const { return nx; }

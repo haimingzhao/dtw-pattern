@@ -9,7 +9,7 @@
 
 #define BLOCK_SIZE 256
 
-const std::string classtype = "CUDA_Optimise_Matrix";
+const std::string MatrixCudaOp::classtype = "CUDA_Optimise_Matrix";
 
 MatrixCudaOp::MatrixCudaOp(const std::vector<double> &X, const std::vector<double> &Y): Matrix(X,Y){}
 
