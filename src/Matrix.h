@@ -54,7 +54,7 @@ private:
 public:
     Matrix(const std::vector<double> &X, const std::vector<double> &Y);
 
-    virtual ~Matrix(){ std::cout<< "base deconstructor" << std::endl; };
+//    virtual ~Matrix(){ };
 
     // getters
     virtual std::string getClasstype() {

@@ -39,6 +39,8 @@ public:
         return Y;
     }
 
+    void capVectors(int cap);
+
 // helper functions for IO
     // print write matrix,  must be one of the class member matrix
     void readSeries(const std::string datafile, int start_row);

@@ -21,8 +21,8 @@ void MatrixCuda::allocate() {
     float milliseconds = 0.0 ;
 #endif
     // allocate matrix
-    cudaError_t error = cudaMalloc(&I, (nx*ny)*sizeof(size_t));
-    if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    cudaError_t error;
+    error = cudaMalloc(&I, (nx*ny)*sizeof(size_t)); if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
 
     error = cudaMalloc(&dX, nx*sizeof(double));     if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
     error = cudaMalloc(&dY, ny*sizeof(double));     if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }

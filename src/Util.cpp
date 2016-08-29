@@ -126,3 +126,9 @@ bool Util::writeMatrixSizet(size_t *M, size_t nx, size_t ny, std::string filenam
     fout.close();
     return true;
 }
+
+void Util::capVectors(int cap) {
+    if (cap < X.size()) X = vector<double>(X.begin(), X.begin()+cap);
+    if (cap < Y.size()) Y = vector<double>(Y.begin(), Y.begin()+cap);
+
+}
