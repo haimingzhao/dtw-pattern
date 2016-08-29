@@ -9,8 +9,6 @@
 
 #define BLOCK_SIZE 256
 
-const std::string MatrixCudaOp::classtype = "CUDA_Optimise_Matrix";
-
 MatrixCudaOp::MatrixCudaOp(const std::vector<double> &X, const std::vector<double> &Y): Matrix(X,Y){}
 
 void MatrixCudaOp::allocate() {
@@ -45,7 +43,7 @@ void MatrixCudaOp::allocate() {
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << this->classtype << ", on cudaMalloc, "<< milliseconds << std::endl;
+    std::cout << getClasstype() << ", on cudaMalloc, "<< milliseconds << std::endl;
 #endif
 
 
@@ -63,7 +61,7 @@ void MatrixCudaOp::allocate() {
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << this->classtype << ", on cudaMemcpy time series, "<< milliseconds << std::endl;
+    std::cout << getClasstype() << ", on cudaMemcpy time series, "<< milliseconds << std::endl;
 #endif
 
     allocated = true;
@@ -99,7 +97,7 @@ void MatrixCudaOp::deallocate() {
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << "Matrix, on cudaFree, "<< milliseconds << std::endl;
+    std::cout << getClasstype() << ", on cudaFree, "<< milliseconds << std::endl;
 #endif
 }
 

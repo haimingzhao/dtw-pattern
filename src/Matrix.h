@@ -8,15 +8,14 @@
 //#include <stddef.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 // macro to get the 1D index from 2D index
 //#define getIndex(i, j, ny) (i*ny + j)
 
 class Matrix {
 protected:
-    static const std::string classtype ;
 
-    // the 2 comparing time series
 
     size_t nx, ny;
     std::vector<double> X;
@@ -55,9 +54,13 @@ private:
 public:
     Matrix(const std::vector<double> &X, const std::vector<double> &Y);
 
-    virtual ~Matrix() ;
+    virtual ~Matrix(){ std::cout<< "base deconstructor" << std::endl; };
 
     // getters
+    virtual std::string getClasstype() {
+        return "Host_Matrix";
+    }
+
     size_t getNx() const { return nx; }
     size_t getNy() const { return ny; }
     virtual double *getC() { return C; }

@@ -14,7 +14,6 @@
 
 class MatrixCuda : public Matrix{
 private:
-    static const std::string classtype ;
 
     /* anti-diagonal indexes, 2D array corresponds to index in 1D array
      * to store indexes for use of matrix stored in diagonal consecutive way */
@@ -31,12 +30,15 @@ private:
 //    double getCost(size_t i, size_t j); // calculate the cost of position i, j
 
 public:
+
     MatrixCuda(const std::vector<double> &X, const std::vector<double> &Y);
     virtual ~MatrixCuda();
 
-// getters
-//    size_t getNx() const { return nx; }
-//    size_t getNy() const { return ny; }
+    // getters
+    virtual std::string getClasstype() {
+        return "CUDA_Matrix";
+    }
+
     double *getC();
     double *getD();
     size_t *getL();

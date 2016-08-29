@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 
     Util *u = new Util();
     u->readSeries(filename, 2);  // read file for 2 column start with row 2
-
+/*
     cout <<"CUDA Opt Matrix"<< endl;
     MatrixCudaOp *mo = new MatrixCudaOp(u->getX(), u->getY());
     mo->runAll(t, o, w);
@@ -37,7 +37,8 @@ int main(int argc, char *argv[]) {
 //    Util::writeMatrixBool(mo->getOP(), mo->getNx(), mo->getNy(), "out/CUDAmo_OP.csv");
 //    cout <<"Written to file"<< endl;
     delete mo;
-
+*/
+/*
     cout <<"CUDA Matrix"<< endl;
     MatrixCuda* mc = new MatrixCuda(u->getX(), u->getY());
     mc->runAll(t, o , w);
@@ -49,8 +50,8 @@ int main(int argc, char *argv[]) {
 //    Util::writeMatrixSizet(mc->getL(), mc->getNx(), mc->getNy(), "out/CUDAmc_L.csv");
 //    Util::writeMatrixBool(mc->getOP(), mc->getNx(), mc->getNy(), "out/CUDAmc_OP.csv");
 //    cout <<"Written to file"<< endl;
-    delete mc;
-
+//    delete mc;
+*/
     cout <<"Device Matrix"<< endl;
     Matrix* mh = new Matrix(u->getX(), u->getY());
     mh->runAll(t, o, w);
@@ -61,7 +62,7 @@ int main(int argc, char *argv[]) {
 //    Util::writeMatrixSizet(mh->getL(), mh->getNx(), mh->getNy(), "out/L.csv");
 //    Util::writeMatrixBool(mh->getOP(), mh->getNx(), mh->getNy(), "out/OP.csv");
 //    cout <<"Written to file"<< endl;
-    delete mh;
+//    delete mh;
 
     return 0;
 }

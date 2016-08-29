@@ -9,8 +9,6 @@
 
 #define BLOCK_SIZE 256
 
-const std::string MatrixCuda::classtype = "CUDA_Matrix" ;
-
 MatrixCuda::MatrixCuda(const std::vector<double> &X, const std::vector<double> &Y): Matrix(X,Y){}
 
 void MatrixCuda::allocate() {
@@ -23,29 +21,30 @@ void MatrixCuda::allocate() {
     float milliseconds = 0.0 ;
 #endif
     // allocate matrix
-    cudaMalloc(&I, (nx*ny)*sizeof(size_t));
+    cudaError_t error = cudaMalloc(&I, (nx*ny)*sizeof(size_t));
+    if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
 
-    cudaMalloc(&dX, nx*sizeof(double));
-    cudaMalloc(&dY, ny*sizeof(double));
+    error = cudaMalloc(&dX, nx*sizeof(double));     if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&dY, ny*sizeof(double));     if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
 
-    cudaMalloc(&C, (nx*ny)*sizeof(double));
-    cudaMalloc(&D, (nx*ny)*sizeof(double));
+    error = cudaMalloc(&C, (nx*ny)*sizeof(double));     if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&D, (nx*ny)*sizeof(double));     if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
 
-    cudaMalloc(&L, (nx*ny)*sizeof(size_t));
-    cudaMalloc(&Rsi, (nx*ny)*sizeof(size_t));
-    cudaMalloc(&Rsj, (nx*ny)*sizeof(size_t));
-    cudaMalloc(&Rli, (nx*ny)*sizeof(size_t));
-    cudaMalloc(&Rlj, (nx*ny)*sizeof(size_t));
-    cudaMalloc(&Pi, (nx*ny)*sizeof(size_t));
-    cudaMalloc(&Pj, (nx*ny)*sizeof(size_t));
+    error = cudaMalloc(&L, (nx*ny)*sizeof(size_t));     if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&Rsi, (nx*ny)*sizeof(size_t));   if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&Rsj, (nx*ny)*sizeof(size_t));   if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&Rli, (nx*ny)*sizeof(size_t));   if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&Rlj, (nx*ny)*sizeof(size_t));   if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&Pi, (nx*ny)*sizeof(size_t));    if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&Pj, (nx*ny)*sizeof(size_t));    if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
 
-    cudaMalloc(&visited, (nx*ny)*sizeof(bool));
-    cudaMalloc(&OP, (nx*ny)*sizeof(bool));
+    error = cudaMalloc(&visited, (nx*ny)*sizeof(bool)); if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
+    error = cudaMalloc(&OP, (nx*ny)*sizeof(bool));      if( error != cudaSuccess ) { std::cerr << "Failed at malloc.\n"; return; }
 #ifdef TIME
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << this->classtype << ", on cudaMalloc, "<< milliseconds << std::endl;
+    std::cout << getClasstype() << ", on cudaMalloc, "<< milliseconds << std::endl;
 #endif
 
 
@@ -63,7 +62,7 @@ void MatrixCuda::allocate() {
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << this->classtype << ", on cudaMemcpy time series, "<< milliseconds << std::endl;
+    std::cout << getClasstype() << ", on cudaMemcpy time series, "<< milliseconds << std::endl;
 #endif
 
     allocated = true;
@@ -99,7 +98,7 @@ void MatrixCuda::deallocate() {
     cudaEventRecord ( stop ) ;
     cudaEventSynchronize ( stop ) ;
     cudaEventElapsedTime(&milliseconds, start, stop ) ;
-    std::cout << this->classtype  << ", on cudaFree, "<< milliseconds << std::endl;
+    std::cout << getClasstype()  << ", on cudaFree, "<< milliseconds << std::endl;
 #endif
 }
 

@@ -95,6 +95,7 @@ bool Util::writeMatrix(double *M, size_t nx, size_t ny, std::string filename) {
             fout << M[i*ny + j] << ", ";
         }
         fout << "\n";
+        fout.flush();
     }
     fout.close();
     return true;
@@ -107,6 +108,7 @@ bool Util::writeMatrixBool(bool *M, size_t nx, size_t ny, std::string filename) 
             fout << M[i*ny + j] << ", ";
         }
         fout << "\n";
+        fout.flush();
     }
     fout.close();
     return true;
@@ -119,6 +121,7 @@ bool Util::writeMatrixSizet(size_t *M, size_t nx, size_t ny, std::string filenam
             fout << M[i*ny + j] << ", ";
         }
         fout << "\n";
+        fout.flush();
     }
     fout.close();
     return true;
